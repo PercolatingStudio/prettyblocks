@@ -18,6 +18,8 @@
     "scssphp/scssphp": "^1.11.0"
   },
   "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.2",
+    "prestashop/autoindex": "^2.0",
     "prestashop/php-dev-tools": "^5"
   },
   "config": {
