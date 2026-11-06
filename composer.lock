@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "36582e25353ef5fd4c87794bcad1991c",
+    "content-hash": "b1f4aedb8d1e824f3737d14689baa8cb",
     "packages": [
         {
             "name": "scssphp/scssphp",
@@ -706,27 +706,28 @@
         },
         {
             "name": "prestashop/autoindex",
-            "version": "v2.1.0",
+            "version": "v3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PrestaShopCorp/autoindex.git",
-                "reference": "235f3ec115432ffc32d582198ea498467b3946d0"
+                "reference": "0365e41536b32f227605aae1160efc88a150ec8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PrestaShopCorp/autoindex/zipball/235f3ec115432ffc32d582198ea498467b3946d0",
-                "reference": "235f3ec115432ffc32d582198ea498467b3946d0",
+                "url": "https://api.github.com/repos/PrestaShopCorp/autoindex/zipball/0365e41536b32f227605aae1160efc88a150ec8d",
+                "reference": "0365e41536b32f227605aae1160efc88a150ec8d",
                 "shasum": ""
             },
             "require": {
                 "nikic/php-parser": "^4.10",
-                "php": "^8.0 || ^7.2",
+                "php": "^7.4|^8.0",
                 "symfony/console": "^3.4 || ~4.0 || ~5.0 || ~6.0",
                 "symfony/finder": "^3.4 || ~4.0 || ~5.0 || ~6.0"
             },
             "require-dev": {
-                "phpstan/phpstan": "^0.12.83",
-                "prestashop/php-dev-tools": "1.*"
+                "friendsofphp/php-cs-fixer": "^3.4",
+                "phpstan/phpstan": "^2.1",
+                "prestashop/php-dev-tools": "^5"
             },
             "bin": [
                 "bin/autoindex"
@@ -750,9 +751,9 @@
             "description": "Automatically add an 'index.php' in all the current or specified directories and all sub-directories.",
             "homepage": "https://github.com/PrestaShopCorp/autoindex",
             "support": {
-                "source": "https://github.com/PrestaShopCorp/autoindex/tree/v2.1.0"
+                "source": "https://github.com/PrestaShopCorp/autoindex/tree/v3.0.0"
             },
-            "time": "2022-10-10T08:35:00+00:00"
+            "time": "2026-05-14T11:04:39+00:00"
         },
         {
             "name": "prestashop/php-dev-tools",
@@ -3050,5 +3051,5 @@
         "php": ">=5.6.0"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
