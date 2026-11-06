@@ -2,13 +2,16 @@
   "name": "prettyblocks",
   "private": true,
   "version": "1.0.0",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "dev": "vite --port 3002",
     "build": "vite build",
     "watch": "vite build --watch",
     "preview": "vite preview",
-    "watch-iframe": "vite build --watch --config vite.config.prettyblocks.js",
-    "build-iframe": "vite build --config vite.config.prettyblocks.js"
+    "watch-iframe": "vite build --watch --config vite.config.prettyblocks.mjs",
+    "build-iframe": "vite build --config vite.config.prettyblocks.mjs"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",
