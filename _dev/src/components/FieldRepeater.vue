@@ -30,6 +30,7 @@ import '@vueup/vue-quill/dist/vue-quill.bubble.css';
 //  date picker 
 import { VueDatePicker, WeekStart } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css' 
+import { parseStoredDate, serializePickedDate } from '../scripts/datepicker.mjs'
 
 // UUID
 import { v4 as uuidv4 } from 'uuid'
@@ -61,13 +62,6 @@ const VueQuillHTMLEditButton = {
         module: htmlEditButton,
 }
   
-const formatDateFromString = (date) => {
-  if (date === null || date === undefined || date === '') {
-    return null
-  }
-
-  return new Date(date)
-}
 const props = defineProps({
   field: {
     type: Object,
@@ -159,11 +153,11 @@ const toolbarOptions = [
     <div class="my-4" v-if="f.type == 'datepicker'">
       <Title :title="f.label" />
       <VueDatePicker
-        :model-value="formatDateFromString(f.value)"
+        :model-value="parseStoredDate(f.value)"
         :time-config="{ enableTimePicker: false }"
         :formats="{ month: 'MMM' }"
         :week-start="WeekStart.Monday"
-        @update:modelValue="f.value = $event ?? ''"
+        @update:modelValue="f.value = serializePickedDate($event)"
       />
     </div>  
 
