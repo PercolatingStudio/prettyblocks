@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (c) Since 2020 PrestaSafe and contributors
  *
@@ -446,6 +445,12 @@ class PrettyBlocks extends Module implements WidgetInterface
     {
         $this->_addDynamicZones();
         if ((isset($_SERVER['HTTP_SEC_FETCH_DEST']) && $_SERVER['HTTP_SEC_FETCH_DEST'] == 'iframe') || Tools::getValue('prettyblocks') === '1') {
+            // Mode édition (iframe du builder) : build.js neutralise TOUS les liens de la page
+            // (preventDefault + postMessage vers le BO). Cette condition se déclenche sur le seul
+            // en-tête Sec-Fetch-Dest, que LiteSpeed ne prend pas en compte dans sa clé de cache :
+            // sans ceci, la page rendue pour l'iframe est mise en cache public et servie à tous
+            // les visiteurs, chez qui plus aucun lien ne répond au clic (incident maisonaveni, 23/10/2026).
+            Hook::exec('litespeedNotCacheable', ['reason' => 'PrettyBlocks edit mode', 'from' => 'prettyblocks']);
             $this->context->controller->registerJavascript(
                 'prettyblocks',
                 'modules/' . $this->name . '/views/js/build/build.js',
