@@ -93,7 +93,7 @@ const reloadButton = () => {
     </div>
     <div>
       <!-- header dropdown with demo parameters-->
-      <!-- Copyright <a class="text-indigo" href="https://www.prestasafe.com">www.prestasafe.com</a> -->
+      <!-- Copyright <a class="text-indigo" href="https://percolating-studio.com">Percolating Studio</a> -->
       <div class="border-gray-200">
         <ButtonLight @click="changeIframeSize('w-full', 'h-full', 'desktop')"
           :class="sizeSelected == 'w-full' ? 'bg-black bg-opacity-10' : ''" icon="ComputerDesktopIcon"

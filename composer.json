@@ -1,6 +1,7 @@
 {
   "name": "prestasafe/prettyblocks",
   "description": "Theme manager for prestashop",
+  "homepage": "https://percolating-studio.com",
   "license": "AFL-3.0",
   "keywords": [
     "prestashop",
@@ -8,8 +9,8 @@
   ],
   "authors": [
     {
-      "name": "PrestaSafe",
-      "homepage": "https://www.prestasafe.com"
+      "name": "Percolating Studio",
+      "homepage": "https://percolating-studio.com"
     }
   ],
   "require": {

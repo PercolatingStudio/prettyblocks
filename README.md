@@ -7,9 +7,11 @@
 <div style="background-color: #dc2626; color: white; padding: 10px; border-radius: 8px; text-align:center "> PrettyBlocks V4 arrive très prochainement 😉</div>
 <br>
 
-![Téléchargements](https://img.shields.io/github/downloads/PrestaSafe/prettyblocks/total)
+![Téléchargements](https://img.shields.io/github/downloads/PercolatingStudio/prettyblocks/total)
 
 Le premier page builder open source conçu pour PrestaShop ! 
+
+Édité et maintenu par [Percolating Studio](https://percolating-studio.com).
 
 La documentation technique est disponible ici : [https://prettyblocks.io/](https://prettyblocks.io/): 
 
@@ -22,7 +24,7 @@ La documentation technique est disponible ici : [https://prettyblocks.io/](https
 
 ```
 cd modules
-git clone https://github.com/PrestaSafe/prettyblocks.git
+git clone https://github.com/PercolatingStudio/prettyblocks.git
 cd prettyblocks
 composer install
 cd _dev
@@ -33,12 +35,24 @@ cd ../../../ && php bin/console prestashop:module install prettyblocks
 ### Release
 
 Téléchargez `prettyblocks-{version}.zip` dans les assets de la
-[dernière release](https://github.com/PrestaSafe/prettyblocks/releases/latest),
+[dernière release](https://github.com/PercolatingStudio/prettyblocks/releases/latest),
 puis installez ce fichier directement dans votre PrestaShop. N'utilisez pas
 l'archive automatique **Source code (zip)** de GitHub : elle ne contient pas le
 module compilé et n'est pas installable.
 
 Vous pouvez également utiliser notre module ClassicBlocks, afin d'avoir 4 blocks à utiliser. Disponible ici: [Télécharger ClassicBlocks](https://github.com/PrestaSafe/classicblocks)
+
+## Validation des pull requests V3
+
+Le [laboratoire de PR](docs/pr-validation.md) automatise la construction du ZIP,
+l’installation sur PrestaShop 8/9 et les diagnostics. Il permet également de
+conserver des boutiques locales pour vérifier le back-office avant de valider
+une contribution.
+
+```bash
+node scripts/pr-lab.mjs list
+node scripts/pr-lab.mjs test 350 --keep
+```
 
 ## Themes compatible
 
@@ -48,6 +62,8 @@ Découvrez notre [Theme Optimisé SEO / Performance et mobile PrestaShop: CartZi
 ## English version
 
 PrettyBlocks is the first page builder open source for PrestaShop
+
+Published and maintained by [Percolating Studio](https://percolating-studio.com).
 
 You will find the technical documentation here (only in French, soon in english too): [Technical documentation](https://prettyblocks.io/)
 
@@ -59,7 +75,7 @@ You will find the technical documentation here (only in French, soon in english 
 
 ```
 cd modules
-git clone https://github.com/PrestaSafe/prettyblocks.git
+git clone https://github.com/PercolatingStudio/prettyblocks.git
 cd prettyblocks
 composer install
 cd _dev
@@ -69,7 +85,7 @@ cd ../../../ && php bin/console prestashop:module install prettyblocks
 
 ### From Release
 Download `prettyblocks-{version}.zip` from the assets of our
-[latest release](https://github.com/PrestaSafe/prettyblocks/releases/latest)
+[latest release](https://github.com/PercolatingStudio/prettyblocks/releases/latest)
 and install that file directly in PrestaShop. Do not use GitHub's automatically
 generated **Source code (zip)** archive: it does not contain the compiled module
 and cannot be installed.
@@ -82,8 +98,8 @@ Discover our [PrestaShop SEO / Performance and Mobile Optimized Theme: CartZilla
 
 ## Top contributors 
 <p>Thanks to</p>
-<a href="https://github.com/PrestaSafe/prettyblocks/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=PrestaSafe/prettyblocks" />
+<a href="https://github.com/PercolatingStudio/prettyblocks/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=PercolatingStudio/prettyblocks" />
 </a>
 
 

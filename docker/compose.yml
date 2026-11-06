@@ -72,7 +72,7 @@ services:
       DB_SERVER: db82
       PS_DOMAIN: "localhost:${PS82_PORT:-8082}"
     ports:
-      - "${PS82_PORT:-8082}:80"
+      - "127.0.0.1:${PS82_PORT:-8082}:80"
     volumes:
       - ps82-data:/var/www/html
       - ..:/var/www/html/modules/prettyblocks
@@ -108,7 +108,7 @@ services:
       DB_SERVER: db91
       PS_DOMAIN: "localhost:${PS91_PORT:-8091}"
     ports:
-      - "${PS91_PORT:-8091}:80"
+      - "127.0.0.1:${PS91_PORT:-8091}:80"
     volumes:
       - ps91-data:/var/www/html
       - ..:/var/www/html/modules/prettyblocks

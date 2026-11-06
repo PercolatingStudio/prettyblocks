@@ -73,8 +73,9 @@ class PrettyBlocks extends Module implements WidgetInterface
     {
         $this->name = 'prettyblocks';
         $this->tab = 'administration';
-        $this->version = '3.2.2';
-        $this->author = 'PrestaSafe';
+        $this->version = '3.2.3';
+        $this->author = 'Percolating Studio';
+        $this->author_uri = 'https://percolating-studio.com';
         $this->need_instance = 1;
         $this->js_path = $this->_path . 'views/js/';
         $this->css_path = $this->_path . 'views/css/';

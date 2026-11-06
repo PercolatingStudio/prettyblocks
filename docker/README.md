@@ -78,7 +78,7 @@ scripts/test-release.sh
 Pass an existing archive to test the exact package without rebuilding it:
 
 ```bash
-scripts/test-release.sh dist/prettyblocks-3.2.2.zip
+scripts/test-release.sh dist/prettyblocks-3.2.3.zip
 ```
 
 The release test validates and extracts the ZIP with PrestaShop's native ZIP
