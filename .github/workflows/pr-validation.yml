@@ -92,6 +92,10 @@ jobs:
       - name: Check validation runner
         if: steps.harness.outputs.available == 'true'
         working-directory: trusted-harness
+        env:
+          # Self-tests use fake PRs; only the real validation consumes event SHAs.
+          PR_LAB_EXPECTED_HEAD: ''
+          PR_LAB_EXPECTED_BASE: ''
         run: node --test tests/pr-lab.test.mjs
 
       - name: Run isolated PR validation
