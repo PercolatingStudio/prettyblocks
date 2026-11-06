@@ -118,10 +118,13 @@ la PR d’origine.
 
 ## Protection de main
 
-Pour rendre cette validation obligatoire, configurer une règle GitHub exigeant
-le check **PR validation (PS8 + PS9)** et une approbation humaine, avec branche à
-jour avant merge. Le laboratoire ne change pas les règles d’administration du
-dépôt. À l’installation, `main` n’était pas protégée et l’auto-merge était désactivé.
+La protection de `main` exige déjà le statut **dependency-policy**, y compris
+pour les administrateurs. Les mises à jour isolées de dépendances viennent du
+Dependabot officiel, sauf exception mainteneur documentée dans CONTRIBUTING.md.
+Pour rendre aussi les tests PrestaShop obligatoires après le bootstrap du lab,
+ajouter le check **PR validation (PS8 + PS9)** et une approbation humaine, avec
+branche à jour avant merge, en conservant la règle de dépendances existante.
+L’auto-merge reste désactivé.
 
 Le banc ne couvre pas encore les thèmes tiers, toutes les interactions de
 l’éditeur, le multiboutique, les tests de charge ou l’upgrade automatique. Le
