@@ -115,6 +115,8 @@ Pour la recette interactive du calendrier, le module de fixture
 boutique de test**. Il fournit le bloc « QA date field » sans modifier les
 fichiers PrettyBlocks installés. Vérifier sélection, effacement et
 sauvegarde/rechargement d'une date. Les fixtures restent hors du ZIP.
+Exécuter les commandes PrestaShop de recette avec l'utilisateur web (`www-data`
+dans ces conteneurs) pour ne pas créer ensuite de caches appartenant à root.
 
 Avant d’approuver une PR, vérifier dans les boutiques conservées :
 

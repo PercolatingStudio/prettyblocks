@@ -182,6 +182,12 @@ for service in ps82 ps91; do
 
   docker compose "${compose_files[@]}" exec -T "$service" sh -lc \
     'find modules/prettyblocks -type f -name "*.php" -print0 | xargs -0 -n 1 php -l >/dev/null'
+
+  if [[ ${PRETTYBLOCKS_KEEP_STACK:-0} == 1 ]]; then
+    # CLI smoke tests may create cache files as root; keep BO previews writable.
+    docker compose "${compose_files[@]}" exec -T "$service" \
+      chown -R www-data:www-data /var/www/html/var/cache
+  fi
 done
 
 for service_and_port in "ps82:$PS82_PORT" "ps91:$PS91_PORT"; do
