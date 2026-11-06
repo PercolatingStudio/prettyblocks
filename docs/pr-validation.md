@@ -84,6 +84,13 @@ des permissions en lecture et ne repose pas sur `pull_request_target`. Les PR de
 fork peuvent nécessiter l’autorisation de lancement habituelle de GitHub.
 Ces choix suivent les [recommandations de sécurité GitHub Actions](https://docs.github.com/en/actions/reference/security/secure-use).
 
+Une évolution volontaire d'une garde de compatibilité peut être refusée par la
+garde encore présente dans la base fiable. Dans ce cas, ne pas transformer ce
+check rouge en succès : documenter l'écart, relire séparément le nouveau test et
+exécuter **Build release package → Run workflow** sur la branche proposée. Ce
+lancement teste le nouveau builder et son ZIP sans publier de release ; il ne
+réécrit pas le résultat du check utilisant l'ancienne base.
+
 Le workflow de release conserve la responsabilité des pushes sur `main` et de
 la publication des nouvelles versions. Si la version du module existe déjà,
 les assets publiés restent inchangés ; une nouvelle release exige un bump de
