@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, lstatSync, mkdtempSync, mkdirSync, openSync, closeSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, lstatSync, mkdtempSync, mkdirSync, openSync, closeSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -124,7 +124,14 @@ async function main() {
   if (opts.command === 'down') {
     const output = resolve(opts.target || '');
     const state = JSON.parse(readFileSync(join(output, 'result.json'), 'utf8'));
-    if (!/^prettyblocks-pr-\d+-[a-zA-Z0-9]+$/.test(state.project) || !state.workspace?.startsWith(join(tmpdir(), 'prettyblocks-pr-'))) {
+    const workspaceName = basename(state.workspace || '');
+    if (
+      !/^prettyblocks-pr-\d+-[a-zA-Z0-9]+$/.test(workspaceName)
+      || state.project !== workspaceName.toLowerCase()
+      || !lstatSync(state.workspace).isDirectory()
+      || lstatSync(state.workspace).isSymbolicLink()
+      || dirname(realpathSync(state.workspace)) !== realpathSync(tmpdir())
+    ) {
       throw new Error('Invalid PR lab state; refusing cleanup.');
     }
     run('docker', ['compose', '-p', state.project, '-f', join(state.workspace, 'docker/compose.yml'), '-f', join(state.workspace, 'docker/compose.release-test.yml'), 'down', '-v', '--remove-orphans'], {

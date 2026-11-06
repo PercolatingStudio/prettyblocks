@@ -465,3 +465,20 @@ test('--keep conserve la stack et down cible uniquement son projet dédié', t =
   assert.equal(lab.result().kept, false);
   assert.doesNotMatch(readFileSync(join(lab.output, 'report.md'), 'utf8'), /Prévisualisation locale/);
 });
+
+test('down refuse un workspace forgé en dehors du répertoire temporaire direct', t => {
+  const lab = fixture(t, { pr: { number: 908 } });
+  mkdirSync(lab.output, { recursive: true });
+  const victim = join(lab.root, 'prettyblocks-pr-908-forged');
+  mkdirSync(victim);
+  writeFileSync(join(victim, 'keep.txt'), 'must survive');
+  writeFileSync(join(lab.output, 'result.json'), JSON.stringify({
+    workspace: victim,
+    project: 'prettyblocks-pr-908-forged',
+  }));
+  const cleanup = lab.down();
+  assert.notEqual(cleanup.status, 0);
+  assert.match(cleanup.stderr, /Invalid PR lab state/);
+  assert.equal(readFileSync(join(victim, 'keep.txt'), 'utf8'), 'must survive');
+  assert.equal(existsSync(join(lab.home, 'docker-calls.json')), false);
+});

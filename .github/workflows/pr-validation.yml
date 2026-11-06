@@ -139,8 +139,34 @@ jobs:
             '- Ne pas interpréter un test vert comme une approbation de merge.' \
             >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload validation report
+      - name: Sanitize validation artifacts
+        id: sanitize
         if: ${{ always() }}
+        env:
+          REPORT_DIR: ${{ runner.temp }}/pr-validation-report
+        run: |
+          set -Eeuo pipefail
+          node --input-type=module <<'JS'
+          import { lstatSync, readdirSync, unlinkSync } from 'node:fs';
+          import { join } from 'node:path';
+          const root = process.env.REPORT_DIR;
+          function sanitize(path) {
+            const stat = lstatSync(path);
+            if (stat.isSymbolicLink()) {
+              if (path === root) throw new Error('Report root cannot be a symlink');
+              unlinkSync(path);
+            } else if (stat.isDirectory()) {
+              for (const child of readdirSync(path)) sanitize(join(path, child));
+            } else if (!stat.isFile()) {
+              throw new Error('Unsupported artifact type: ' + path);
+            }
+          }
+          sanitize(root);
+          JS
+          echo 'safe=true' >> "$GITHUB_OUTPUT"
+
+      - name: Upload validation report
+        if: ${{ always() && steps.sanitize.outputs.safe == 'true' }}
         uses: actions/upload-artifact@v7
         with:
           name: pr-validation-${{ github.run_id }}-${{ github.run_attempt }}
