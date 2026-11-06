@@ -6,6 +6,7 @@ import ButtonLight from './ButtonLight.vue';
 import { contextShop, useStore, usePrettyBlocksContext } from '../store/pinia'
 import { HttpClient } from "../services/HttpClient";
 import { trans } from "../scripts/trans";
+import { sameBlockContext, snapshotBlockContext } from '../store/blockSelection.mjs';
 
 let prettyBlocksContext = usePrettyBlocksContext()
 const props = defineProps({
@@ -49,6 +50,7 @@ const removeSubState = () => {
 
 const removeState = async () => {
   if (confirm('Voulez vous supprimer l\'element ?')) {
+    const context = snapshotBlockContext(prettyBlocksContext);
     const params = {
       id_prettyblocks: props.element.id_prettyblocks,
       action: 'removeState',
@@ -58,7 +60,8 @@ const removeState = async () => {
     let data = await HttpClient.get(ajax_urls.state, params)
     // emitter.emit('initStates')
     // emitter.emit('reloadIframe', null)
-    prettyBlocksContext.initStates()
+    if (!sameBlockContext(context, snapshotBlockContext(prettyBlocksContext))) return;
+    await prettyBlocksContext.initStates({ afterDelete: true, context })
     prettyBlocksContext.reloadIframe()
     prettyBlocksContext.displayMessage(trans('element_removed'))
   }

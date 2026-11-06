@@ -70,6 +70,12 @@ const blockLoaded = ref(false);
 
 // load block config in right panel
 watch(currentBlock, (newVal) => {
+  if (!newVal.id_prettyblocks) {
+    blockLoaded.value = false;
+    config.value = false;
+    state.value = false;
+    return;
+  }
   if (newVal.subSelected == null) {
     loadBlockConfig(newVal)
   }else{
@@ -91,6 +97,10 @@ const loadBlockConfig = async (element) => {
   let block = new Block(element);
   blockLoaded.value = block;
   let res = await block.loadBlockConfig();
+  if (block.id_prettyblocks != currentBlock.value.id_prettyblocks
+    || currentBlock.value.subSelected != null
+    || block.id_lang != prettyBlocksContext.psContext.id_lang
+    || block.id_shop != prettyBlocksContext.psContext.id_shop) return;
   config.value = res.config;
   prettyBlocksContext.$patch({
       saveContext:ref('config')

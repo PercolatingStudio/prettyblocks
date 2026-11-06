@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { eventHandler } from '../scripts/eventHandler'
 import { createToaster } from "@meforma/vue-toaster";
 import { HttpClient } from '../services/HttpClient';
+import { acceptsBlockRefresh, blockSelectionAfterRefresh, sameBlockContext, snapshotBlockContext } from './blockSelection.mjs';
 const toaster = createToaster({
   position: "top",
 });
@@ -25,6 +26,8 @@ export const usePrettyBlocksContext = defineStore('prettyBlocksContext', {
   state: () => ({
     blocks: [],
     blocksFormatted: [],
+    blocksContext: null,
+    statesRequestId: 0,
     zones: [],
     currentBlock: {
       id_prettyblocks: null,
@@ -91,38 +94,41 @@ export const usePrettyBlocksContext = defineStore('prettyBlocksContext', {
         state.iframe.device = ref(device)
       })
     },
-    initStates() {
-
-      let context =  this.psContext;
-      let current_zone = this.currentZone.name;
-      // displayZoneName.value = current_zone;
+    initStates(options = {}) {
+      const context = snapshotBlockContext(this);
+      if (options.context && !sameBlockContext(options.context, context)) {
+        return Promise.resolve(null);
+      }
+      const requestId = ++this.statesRequestId;
       const params = {
         ajax: true,
         action: "GetStates",
-        zone: current_zone,
+        zone: context.zone,
         ctx_id_lang: context.id_lang,
         ctx_id_shop: context.id_shop,
         ajax_token: security_app.ajax_token,
       };
 
-      HttpClient.get(ajax_urls.state, params)
+      return HttpClient.get(ajax_urls.state, params)
         .then((data) => {
-          let blocksFormatted = Object.entries(data.blocks).map(([key, value] = block) => {
-            return value.formatted;
-          });
+          if (!acceptsBlockRefresh(requestId, this.statesRequestId, context, snapshotBlockContext(this))) {
+            return null;
+          }
+          const blocks = Object.values(data.blocks || {});
           this.$patch((state) => {
-            state.blocks =  data.blocks,
-            state.blocksFormatted = blocksFormatted
-
-            if (!data.blocks.length) {
-              state.saveContext = ref('settings')
-            } else {
-              state.currentBlock = {
-                id_prettyblocks: data.blocks.length ? data.blocks[data.blocks.length - 1].id_prettyblocks : null
-              }
+            const selection = blockSelectionAfterRefresh(blocks, state.currentBlock, {
+              ...options,
+              contextChanged: state.blocksContext && !sameBlockContext(state.blocksContext, context),
+            });
+            state.blocks = blocks;
+            state.blocksFormatted = blocks.map(block => block.formatted);
+            state.blocksContext = context;
+            if (selection) {
+              state.currentBlock = selection.currentBlock;
+              state.saveContext = selection.saveContext;
             }
-
           });
+          return data;
         })
         .catch((error) => console.error(error));
     },

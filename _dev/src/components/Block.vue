@@ -8,6 +8,7 @@ import { createToaster } from "@meforma/vue-toaster";
 import { contextShop, usePrettyBlocksContext } from "../store/pinia";
 import { HttpClient } from "../services/HttpClient.js";
 import { trans } from "../scripts/trans";
+import { sameBlockContext, snapshotBlockContext } from '../store/blockSelection.mjs';
 
 let prettyBlocksContext = usePrettyBlocksContext()
 
@@ -40,23 +41,25 @@ defineComponent({
 let showLoader = ref(false);
 
 const AddOnZOne = async (code) => {
-  let current_zone = prettyBlocksContext.currentZone;
+  const context = snapshotBlockContext(prettyBlocksContext);
   showLoader.value = true;
 
   const params = {
     action: "insertBlock",
     code: code,
     ajax: true,
-    zone_name: current_zone.name,
-    ctx_id_lang: prettyBlocksContext.psContext.id_lang,
-    ctx_id_shop: prettyBlocksContext.psContext.id_shop,
+    zone_name: context.zone,
+    ctx_id_lang: context.id_lang,
+    ctx_id_shop: context.id_shop,
     ajax_token: security_app.ajax_token,
   };
   let url = ajax_urls.block_action_urls;
 let data = await HttpClient.get(url, params);
+  showLoader.value = false;
+  if (!sameBlockContext(context, snapshotBlockContext(prettyBlocksContext))) return;
 
   prettyBlocksContext.emit("toggleModal");  
-  prettyBlocksContext.initStates();
+  await prettyBlocksContext.initStates({ selectId: data.state?.id_prettyblocks, context });
   prettyBlocksContext.displayMessage(trans('element_added'));
   prettyBlocksContext.reloadIframe();
 
