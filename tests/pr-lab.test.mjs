@@ -270,7 +270,7 @@ function writeExecutable(path, body) {
   chmodSync(path, 0o755);
 }
 
-function fixture(t, overrides = {}) {
+function fixture(t, overrides = {}, inheritedEnvironment = process.env) {
   const root = mkdtempSync(join(tmpdir(), 'prettyblocks-pr-lab-test-'));
   const home = join(root, 'home');
   const bin = join(root, 'bin');
@@ -288,12 +288,16 @@ function fixture(t, overrides = {}) {
   writeExecutable(join(bin, 'docker'), fakeDocker);
 
   const environment = {
-    ...process.env,
+    ...inheritedEnvironment,
     PATH: bin,
     HOME: home,
     TMPDIR: temporary,
     GH_TOKEN: 'must-not-reach-build',
     GITHUB_TOKEN: 'must-not-reach-test',
+    // A real PR event must not constrain the fake PRs used by these tests.
+    // Individual guard tests can still opt in through extraEnvironment.
+    PR_LAB_EXPECTED_HEAD: '',
+    PR_LAB_EXPECTED_BASE: '',
   };
 
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -360,6 +364,28 @@ test('refuse une tête différente de celle attendue par le workflow', t => {
   assert.equal(result.status, 'failed');
   assert.match(result.error, /PR head changed since this workflow event/);
   assert.equal(result.workspace, undefined);
+});
+
+test('isole les fixtures des SHA de la vraie PR hérités du workflow', t => {
+  const lab = fixture(t, { pr: { number: 909 } }, {
+    ...process.env,
+    PR_LAB_EXPECTED_HEAD: 'e'.repeat(40),
+    PR_LAB_EXPECTED_BASE: 'f'.repeat(40),
+  });
+  const execution = lab.test();
+
+  assert.equal(execution.status, 0, execution.stderr || execution.stdout);
+  assert.equal(lab.result().status, 'passed');
+  assert.equal(lab.result().base, BASE_SHA);
+  assert.equal(lab.result().head, HEAD_SHA);
+});
+
+test('conserve le contrôle explicite du SHA de base pour la vraie validation', t => {
+  const lab = fixture(t, { pr: { number: 910 } });
+  const execution = lab.test([], { PR_LAB_EXPECTED_BASE: 'e'.repeat(40) });
+
+  assert.notEqual(execution.status, 0);
+  assert.match(lab.result().error, /main changed since this workflow event/);
 });
 
 test('refuse une tête qui change pendant le fetch', t => {
