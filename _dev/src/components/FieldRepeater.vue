@@ -28,7 +28,7 @@ import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import '@vueup/vue-quill/dist/vue-quill.bubble.css';
 
 //  date picker 
-import VueDatePicker from '@vuepic/vue-datepicker';
+import { VueDatePicker, WeekStart } from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css' 
 
 // UUID
@@ -62,6 +62,10 @@ const VueQuillHTMLEditButton = {
 }
   
 const formatDateFromString = (date) => {
+  if (date === null || date === undefined || date === '') {
+    return null
+  }
+
   return new Date(date)
 }
 const props = defineProps({
@@ -154,7 +158,13 @@ const toolbarOptions = [
 
     <div class="my-4" v-if="f.type == 'datepicker'">
       <Title :title="f.label" />
-      <VueDatePicker :model-value="formatDateFromString(f.value)" :enable-time-picker="false" month-name-format="short" @update:modelValue="f.value = $event" />
+      <VueDatePicker
+        :model-value="formatDateFromString(f.value)"
+        :time-config="{ enableTimePicker: false }"
+        :formats="{ month: 'MMM' }"
+        :week-start="WeekStart.Monday"
+        @update:modelValue="f.value = $event ?? ''"
+      />
     </div>  
 
     <div class="my-4" v-if="f.type == 'slider'">
