@@ -70,36 +70,36 @@ async function main() {
   };
   await writeStatus('pending', 'Vérification de la politique de dépendances.');
   try {
-  const files = [];
-  for (let page = 1; page <= 30; page++) {
-    const batch = await api(`${prefix}/pulls/${number}/files?per_page=100&page=${page}`);
-    files.push(...batch);
-    if (batch.length < 100) break;
-  }
-  if (files.length !== pr.changed_files) throw new Error('Incomplete PR file list; refusing to pass policy.');
-  const changedManifests = [];
-  for (const file of files.filter(file => manifests.has(file.filename))) {
-    async function manifest(side, absent) {
-      if (absent) return {};
-      const content = await api(`repos/${side.repo.full_name}/contents/${file.filename}?ref=${side.sha}`);
-      if (content.encoding !== 'base64' || content.type !== 'file') throw new Error('Invalid manifest response.');
-      return JSON.parse(Buffer.from(content.content, 'base64').toString('utf8'));
+    const files = [];
+    for (let page = 1; page <= 30; page++) {
+      const batch = await api(`${prefix}/pulls/${number}/files?per_page=100&page=${page}`);
+      files.push(...batch);
+      if (batch.length < 100) break;
     }
-    const before = await manifest(pr.base, file.status === 'added');
-    const after = await manifest(pr.head, file.status === 'removed');
-    if (dependenciesChanged(file.filename, before, after)) changedManifests.push(file.filename);
-  }
-  // Read labels again immediately before evaluating the exception. This also
-  // avoids writing an older event onto a newer head.
-  const latest = await api(`${prefix}/pulls/${number}`);
-  if (latest.head.sha !== pr.head.sha || latest.state !== 'open') throw new Error('PR changed during policy evaluation; rerun.');
-  const result = evaluate(latest, files.map(file => file.filename), changedManifests);
-  const summary = `## Dependency policy — PR #${number}\n\n- Head : \`${pr.head.sha}\`\n- Résultat : **${result.state}**\n- ${result.reason}\n\nVoir CONTRIBUTING.md. Aucun code contributeur exécuté, aucune fermeture ou fusion automatique.\n`;
-  console.log(JSON.stringify({ number: Number(number), head: pr.head.sha, ...result }, null, 2));
-  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
-  if (dryRun) return;
-  await writeStatus(result.state, result.reason);
-  if (result.state === 'failure') process.exitCode = 1;
+    if (files.length !== pr.changed_files) throw new Error('Incomplete PR file list; refusing to pass policy.');
+    const changedManifests = [];
+    for (const file of files.filter(file => manifests.has(file.filename))) {
+      async function manifest(side, absent) {
+        if (absent) return {};
+        const content = await api(`repos/${side.repo.full_name}/contents/${file.filename}?ref=${side.sha}`);
+        if (content.encoding !== 'base64' || content.type !== 'file') throw new Error('Invalid manifest response.');
+        return JSON.parse(Buffer.from(content.content, 'base64').toString('utf8'));
+      }
+      const before = await manifest(pr.base, file.status === 'added');
+      const after = await manifest(pr.head, file.status === 'removed');
+      if (dependenciesChanged(file.filename, before, after)) changedManifests.push(file.filename);
+    }
+    // Read labels again immediately before evaluating the exception. This also
+    // avoids writing an older event onto a newer head.
+    const latest = await api(`${prefix}/pulls/${number}`);
+    if (latest.head.sha !== pr.head.sha || latest.state !== 'open') throw new Error('PR changed during policy evaluation; rerun.');
+    const result = evaluate(latest, files.map(file => file.filename), changedManifests);
+    const summary = `## Dependency policy — PR #${number}\n\n- Head : \`${pr.head.sha}\`\n- Résultat : **${result.state}**\n- ${result.reason}\n\nVoir CONTRIBUTING.md. Aucun code contributeur exécuté, aucune fermeture ou fusion automatique.\n`;
+    console.log(JSON.stringify({ number: Number(number), head: pr.head.sha, ...result }, null, 2));
+    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+    if (dryRun) return;
+    await writeStatus(result.state, result.reason);
+    if (result.state === 'failure') process.exitCode = 1;
   } catch (error) {
     await writeStatus('error', 'Analyse incomplète : consulter les logs et relancer.');
     throw error;
