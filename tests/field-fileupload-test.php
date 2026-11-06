@@ -35,6 +35,7 @@ file_put_contents($imagePath, $png);
 file_put_contents($corruptPath, 'not an image');
 file_put_contents($emptyImagePath, '');
 file_put_contents($documentPath, 'local document');
+file_put_contents($fixtureRoot . '/documents/image.txt', $png);
 file_put_contents($outsideFile, $png);
 file_put_contents($siblingRoot . '/pixel.png', $png);
 $outsideLink = $fixtureRoot . '/uploads/outside-link.png';
@@ -232,7 +233,10 @@ try {
 
     assertLocalImage('uploads/pixel.png', $imageSize, 'relative URL');
     assertLocalImage('shop/uploads/pixel.png', $imageSize, 'relative URL with physical URI');
-    assertLocalImage('/uploads/pixel.png', $imageSize, 'root-relative URL');
+    assertZeroMetadata('/uploads/pixel.png', 'root-relative URL outside shop subdirectory');
+    Context::getContext()->shop->physical_uri = '/';
+    assertLocalImage('/uploads/pixel.png', $imageSize, 'root-relative URL for root shop');
+    Context::getContext()->shop->physical_uri = '/shop/';
     assertLocalImage('/shop/uploads/pixel.png', $imageSize, 'root-relative URL with physical URI');
     assertLocalImage('/shop/uploads/pixel.png?cache=1#preview', $imageSize, 'root-relative query URL');
     assertLocalImage(
@@ -304,6 +308,11 @@ try {
     assertSameValue(strlen('local document'), $document['size'], 'local non-image size');
     assertSameValue(0, $document['width'], 'local non-image width');
     assertSameValue(0, $document['height'], 'local non-image height');
+
+    $imageDocument = formatFileUploadForFront('documents/image.txt');
+    assertSameValue($imageSize, $imageDocument['size'], 'image bytes in a document retain file size');
+    assertSameValue(0, $imageDocument['width'], 'document media does not acquire image dimensions');
+    assertSameValue(0, $imageDocument['height'], 'document media height remains zero');
 
     assertZeroMetadata('../' . basename($outsideFile), 'plain traversal');
     assertZeroMetadata('%2e%2e/' . basename($outsideFile), 'encoded traversal');

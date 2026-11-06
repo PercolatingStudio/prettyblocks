@@ -26,7 +26,7 @@ test('adding selects the returned ID, not whichever block happens to be last', (
   const selection = blockSelectionAfterRefresh(blocks, current, { selectId: '10' });
   assert.deepEqual(selection, {
     currentBlock: { id_prettyblocks: 10, instance_id: 'first', code: 'text', subSelected: null, need_reload: false, states: blocks[0].repeater_db },
-    saveContext: 'config',
+    saveContext: 'loading',
   });
 });
 

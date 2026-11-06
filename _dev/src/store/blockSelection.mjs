@@ -46,7 +46,7 @@ export function blockSelectionAfterRefresh(blocks, current, options = {}) {
         need_reload: selected.need_reload == null ? true : selected.need_reload,
         states: selected.repeater_db || [],
       },
-      saveContext: 'config',
+      saveContext: 'loading',
     };
   }
   if (!blocks.length || options.contextChanged

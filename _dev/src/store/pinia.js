@@ -357,6 +357,9 @@ export const usePrettyBlocksContext = defineStore('prettyBlocksContext', {
         case 'subState':
           this.emit('saveSubState');
           break;
+        case 'loading':
+          // A selection is changing; do not save the previous block or settings.
+          break;
         default:
           console.warn('Unknown saveContext:', this.saveContext);
       }

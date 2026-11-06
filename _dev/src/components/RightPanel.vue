@@ -21,6 +21,7 @@ import Accordion from "./Accordion.vue";
 import { createToaster } from "@meforma/vue-toaster";
 import { v4 as uuidv4 } from "uuid";
 import Editor from "@tinymce/tinymce-vue";
+import { acceptsBlockRefresh, sameBlockContext, snapshotBlockContext } from '../store/blockSelection.mjs';
 import Block from "../scripts/block";
 import ColorInput from "vue-color-input";
 import FieldRepeater from "./FieldRepeater.vue";
@@ -66,19 +67,25 @@ const state = ref(false);
 const config = ref(false);
 const showLoader = ref(false);
 const blockLoaded = ref(false);
+let configRequestId = 0;
 
 
 // load block config in right panel
 watch(currentBlock, (newVal) => {
-  if (!newVal.id_prettyblocks) {
+  const requestId = ++configRequestId;
+  if (!newVal.id_prettyblocks
+    || !sameBlockContext(prettyBlocksContext.blocksContext, snapshotBlockContext(prettyBlocksContext))) {
+    showLoader.value = false;
     blockLoaded.value = false;
     config.value = false;
     state.value = false;
+    prettyBlocksContext.$patch({ saveContext: 'settings' });
     return;
   }
   if (newVal.subSelected == null) {
-    loadBlockConfig(newVal)
+    loadBlockConfig(newVal, requestId)
   }else{
+    showLoader.value = false;
     getSubState(newVal)
   }
 },{deep: true})
@@ -93,18 +100,33 @@ const loadBlock = async (element) => {
 };
 
 
-const loadBlockConfig = async (element) => {
-  let block = new Block(element);
-  blockLoaded.value = block;
-  let res = await block.loadBlockConfig();
-  if (block.id_prettyblocks != currentBlock.value.id_prettyblocks
-    || currentBlock.value.subSelected != null
-    || block.id_lang != prettyBlocksContext.psContext.id_lang
-    || block.id_shop != prettyBlocksContext.psContext.id_shop) return;
-  config.value = res.config;
-  prettyBlocksContext.$patch({
-      saveContext:ref('config')
-  })
+const loadBlockConfig = async (element, requestId) => {
+  const context = snapshotBlockContext(prettyBlocksContext);
+  const block = new Block(element);
+  blockLoaded.value = false;
+  config.value = false;
+  showLoader.value = true;
+  prettyBlocksContext.$patch({ saveContext: 'loading' });
+  try {
+    const res = await block.loadBlockConfig();
+    if (!acceptsBlockRefresh(requestId, configRequestId, context, snapshotBlockContext(prettyBlocksContext))
+      || !sameBlockContext(prettyBlocksContext.blocksContext, context)
+      || block.id_prettyblocks != currentBlock.value.id_prettyblocks
+      || currentBlock.value.subSelected != null
+      || prettyBlocksContext.saveContext !== 'loading') return;
+    config.value = res.config;
+    blockLoaded.value = block;
+    prettyBlocksContext.$patch({ saveContext: 'config' });
+  } catch (error) {
+    console.error(error);
+  } finally {
+    if (requestId === configRequestId) {
+      showLoader.value = false;
+      if (prettyBlocksContext.saveContext === 'loading') {
+        prettyBlocksContext.$patch({ saveContext: 'settings' });
+      }
+    }
+  }
 };
 
 const saveConfig = async (success = true) => {
@@ -188,7 +210,7 @@ const save = async (success = true) => {
 
     <!-- Config panel -->
     <div
-      v-if="saveContext == 'config'"
+      v-if="saveContext == 'config' && config"
       id="configPanel"
       class="absolute top-0 left-0 overflow-y-auto w-full h-full flex flex-col p-2 bg-slate-100"
       @keyup.enter="saveConfig()"

@@ -472,12 +472,14 @@ class FieldCore
             $value['size'] = (int) $size;
         }
 
-        $imageSize = $this->runFileOperationWithoutWarnings(function () use ($path) {
-            return getimagesize($path);
-        });
-        if (is_array($imageSize) && isset($imageSize[0], $imageSize[1])) {
-            $value['width'] = (int) $imageSize[0];
-            $value['height'] = (int) $imageSize[1];
+        if ($value['mediatype'] === 'image') {
+            $imageSize = $this->runFileOperationWithoutWarnings(function () use ($path) {
+                return getimagesize($path);
+            });
+            if (is_array($imageSize) && isset($imageSize[0], $imageSize[1])) {
+                $value['width'] = (int) $imageSize[0];
+                $value['height'] = (int) $imageSize[1];
+            }
         }
 
         return $value;
@@ -531,7 +533,7 @@ class FieldCore
                 $relativePath = '';
             } elseif (strpos($relativePath, $physicalPath . '/') === 0) {
                 $relativePath = substr($relativePath, strlen($physicalPath) + 1);
-            } elseif ($isAbsoluteUrl) {
+            } elseif ($isAbsoluteUrl || $path[0] === '/') {
                 return null;
             }
         }

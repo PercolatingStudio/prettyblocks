@@ -23,7 +23,8 @@ let languages = security_app.available_language_ids;
 // used to get selected element in panel
 const store = useStore()
 const removeSubState = () => {
-  let context = prettyBlocksContext.psContext
+  const context = snapshotBlockContext(prettyBlocksContext);
+  if (!sameBlockContext(prettyBlocksContext.blocksContext, context)) return;
   const params = {
     formattedID: props.id,
     action: 'removeSubState',
@@ -33,14 +34,15 @@ const removeSubState = () => {
     ajax_token: security_app.ajax_token
   }
   HttpClient.get(ajax_urls.state, params)
-  .then((data) => {
+  .then(async (data) => {
+    if (!sameBlockContext(context, snapshotBlockContext(prettyBlocksContext))) return;
     if (props.element.need_reload) {
       prettyBlocksContext.reloadIframe()
     }
       prettyBlocksContext.sendPrettyBlocksEvents('reloadBlock', {
         id_prettyblocks: props.element.id_prettyblocks
       })
-      prettyBlocksContext.initStates()
+      await prettyBlocksContext.initStates({ selectId: props.element.id_prettyblocks, context })
       prettyBlocksContext.displayMessage(trans('element_removed'))
  
   })
@@ -51,6 +53,7 @@ const removeSubState = () => {
 const removeState = async () => {
   if (confirm('Voulez vous supprimer l\'element ?')) {
     const context = snapshotBlockContext(prettyBlocksContext);
+    if (!sameBlockContext(prettyBlocksContext.blocksContext, context)) return;
     const params = {
       id_prettyblocks: props.element.id_prettyblocks,
       action: 'removeState',
@@ -73,6 +76,7 @@ function select(instance) {
 }
 
 function setSelectedElement(notFormattedId) {
+  if (!sameBlockContext(prettyBlocksContext.blocksContext, snapshotBlockContext(prettyBlocksContext))) return;
   let id = notFormattedId
   let prettyBlocksId = parseInt(id.split('-')[0])
   let block = prettyBlocksContext.blocks.find(b => b.id_prettyblocks === prettyBlocksId)
@@ -133,8 +137,8 @@ const highLightBlock = () => {
       <!-- {{ props.is_child }} -->
       
       <ButtonLight class="handle" v-if="props.config" icon="CogIcon" />
-      <ButtonLight class="handle" v-if="props.is_child" @click.prevent="removeSubState" icon="TrashIcon" />
-      <ButtonLight class="handle" v-if="!props.is_child" @click.prevent="removeState" icon="TrashIcon" />
+      <ButtonLight class="handle" v-if="props.is_child" @click.prevent.stop="removeSubState" icon="TrashIcon" />
+      <ButtonLight class="handle" v-if="!props.is_child" @click.prevent.stop="removeState" icon="TrashIcon" />
       <ButtonLight v-if="!props.is_child" class="handle cursor-move" @click="openModal" icon="DocumentDuplicateIcon" />
       <LanguageModal v-if="showModal" :id_prettyblocks="props.element.id_prettyblocks" :languages="languages" @closeModal="closeModal" @selectLanguages="selectLanguages" />
       <!-- <ButtonLight @click="disabled = !disabled" :icon="disabled ? 'EyeOffIcon' : 'EyeIcon'" /> -->
