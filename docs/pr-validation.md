@@ -7,7 +7,7 @@ ZIP sur deux boutiques indépendantes : PrestaShop 8.2.7 / PHP 8.1 et PrestaShop
 
 ## En local
 
-Prérequis : Node.js 20+, Git, GitHub CLI (`gh auth login`), Docker Desktop lancé
+Prérequis : Node.js 20.19+ (branche 20) ou 22.12+, Git, GitHub CLI (`gh auth login`), Docker Desktop lancé
 avec Compose 2.24.4+ (support de `!override`), curl et unzip. Aucun abonnement IA,
 clé API ou service d’hébergement n’est nécessaire.
 
@@ -95,6 +95,19 @@ Un check vert confirme : merge possible, compilation, dépendances, racine
 `prettyblocks/`, manifeste Vite et JS/CSS, installation/activation sur les deux
 versions, syntaxe PHP, routes, front/iframe et page de connexion BO accessible.
 Il ne confirme pas automatiquement la correction fonctionnelle demandée.
+
+Le builder vérifie aussi les contraintes de l'éditeur riche et les transitions
+de sélection, ainsi que l'adaptateur du calendrier (jour local, valeur vide,
+Paris/New York). Les deux installations exécutent les tests PHP de métadonnées
+des fichiers, de sérialisation des dates, du contrat du hook LiteSpeed et du
+compilateur SCSS. Le test du hook ne remplace pas un essai sur un serveur
+LiteSpeed Enterprise réel.
+
+Pour la recette interactive du calendrier, le module de fixture
+`tests/fixtures/prettyblocksqatest` peut être copié/installé **uniquement dans une
+boutique de test**. Il fournit le bloc « QA date field » sans modifier les
+fichiers PrettyBlocks installés. Vérifier sélection, effacement et
+sauvegarde/rechargement d'une date. Les fixtures restent hors du ZIP.
 
 Avant d’approuver une PR, vérifier dans les boutiques conservées :
 

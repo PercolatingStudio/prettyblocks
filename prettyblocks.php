@@ -446,6 +446,8 @@ class PrettyBlocks extends Module implements WidgetInterface
     {
         $this->_addDynamicZones();
         if ((isset($_SERVER['HTTP_SEC_FETCH_DEST']) && $_SERVER['HTTP_SEC_FETCH_DEST'] == 'iframe') || Tools::getValue('prettyblocks') === '1') {
+            // Prevent public caching of the builder iframe by LiteSpeed Cache.
+            Hook::exec('litespeedNotCacheable', ['reason' => 'PrettyBlocks edit mode', 'from' => 'prettyblocks']);
             $this->context->controller->registerJavascript(
                 'prettyblocks',
                 'modules/' . $this->name . '/views/js/build/build.js',

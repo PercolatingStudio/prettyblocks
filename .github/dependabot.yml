@@ -4,6 +4,11 @@ updates:
   directory: "/_dev/"
   schedule:
     interval: monthly
+  ignore:
+    # These 1.x releases embed Quill 2 and break V3 rich-content round trips.
+    # Revisit this bounded hold with the dedicated editor/sanitizer migration.
+    - dependency-name: "@vueup/vue-quill"
+      versions: [">=1.3.0 <2.0.0"]
   groups:
     npm-minor-patch:
       applies-to: version-updates

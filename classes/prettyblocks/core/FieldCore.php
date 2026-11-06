@@ -261,33 +261,27 @@ class FieldCore
      */
     public function formatFieldDatepicker()
     {
-        $format = 'Y-m-d';
-        // if(isset($this->options['dateFormat'])) {
-        //     $format = $this->options['dateFormat'];
-        // }
-        // if value exists in DB and new_value is empty
-        if (!is_null($this->value) && is_null($this->new_value)) {
-            $date = \DateTime::createFromFormat($format, $this->value);
-            $timestamp = strtotime($this->value);
-
-            return $date ? $date->format($format) : date($format, $timestamp);
+        $value = $this->new_value;
+        if ($value === null) {
+            $value = $this->value;
         }
-        // if value doesn't exists in DB and new value is set
-        if ($this->force_default_value && is_null($this->new_value)) {
-            $date = \DateTime::createFromFormat($format, $this->default);
-            $timestamp = strtotime($this->value);
-
-            return $date ? $date->format($format) : date($format, $timestamp);
+        if ($value === null && $this->force_default_value) {
+            $value = $this->default;
+        }
+        // An explicitly cleared date stays empty, rather than becoming 1970-01-01.
+        if (!is_string($value) || trim($value) === '') {
+            return '';
         }
 
-        // Y-m-d\TH:i:s.u\Z is vuedatepicker default format
-        $date = \DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $this->new_value);
-        if (!$date) {
-            $date = \DateTime::createFromFormat($format, $this->new_value);
+        foreach (['!Y-m-d', '!Y-m-d\TH:i:s.uP', '!Y-m-d\TH:i:sP'] as $format) {
+            $date = \DateTime::createFromFormat($format, $value);
+            $errors = \DateTime::getLastErrors();
+            if ($date && (!$errors || (!$errors['warning_count'] && !$errors['error_count']))) {
+                return $date->format('Y-m-d');
+            }
         }
-        $timestamp = strtotime($this->value);
 
-        return $date ? $date->format($format) : date($format, $timestamp);
+        return '';
     }
 
     /**
@@ -426,13 +420,17 @@ class FieldCore
         $mediatype = '';
         $filename = '';
 
-        if (!empty($value['url'])) {
+        if (!empty($value['url']) && is_string($value['url'])) {
+            $urlPath = parse_url($value['url'], PHP_URL_PATH);
+            if (!is_string($urlPath)) {
+                $urlPath = '';
+            }
             // add extension
-            $extension = pathinfo($value['url'], PATHINFO_EXTENSION);
+            $extension = pathinfo($urlPath, PATHINFO_EXTENSION);
             // add media type (image, document, video, ...)
             $mediatype = \HelperBuilder::getMediaTypeForExtension($extension);
             // add filename
-            $filename = pathinfo($value['url'], PATHINFO_BASENAME);
+            $filename = pathinfo($urlPath, PATHINFO_BASENAME);
         }
 
         $value['extension'] = $extension;
@@ -451,28 +449,260 @@ class FieldCore
     {
         $value = $this->formatFieldFileupload();
 
-        $size = 0;
-        $width = 0;
-        $height = 0;
+        $value['size'] = 0;
+        $value['width'] = 0;
+        $value['height'] = 0;
 
-        if (!empty($value['url'])) {
-            $path = \HelperBuilder::pathFormattedFromUrl($value['url']);
+        $url = isset($value['url']) ? $value['url'] : '';
+        $path = $this->resolveLocalFileUploadPath($url);
+        if ($path === null) {
+            return $value;
+        }
 
-            if (file_exists($path)) {
-                $size = filesize($path);
+        $size = $this->runFileOperationWithoutWarnings(function () use ($path) {
+            return filesize($path);
+        });
+        if ($size !== false) {
+            $value['size'] = (int) $size;
+        }
 
-                // if file is an image, we return width and height
-                if ($value['mediatype'] == 'image') {
-                    list($width, $height) = getimagesize($path);
-                }
+        if ($value['mediatype'] === 'image') {
+            $imageSize = $this->runFileOperationWithoutWarnings(function () use ($path) {
+                return getimagesize($path);
+            });
+            if (is_array($imageSize) && isset($imageSize[0], $imageSize[1])) {
+                $value['width'] = (int) $imageSize[0];
+                $value['height'] = (int) $imageSize[1];
             }
         }
 
-        $value['size'] = (int) $size;
-        $value['width'] = (int) $width;
-        $value['height'] = (int) $height;
-
         return $value;
+    }
+
+    /**
+     * Resolve a file upload URL to an existing local file in the shop root.
+     *
+     * @param mixed $url
+     *
+     * @return string|null
+     */
+    private function resolveLocalFileUploadPath($url)
+    {
+        if (!is_string($url) || $url === '' || strpos($url, "\0") !== false || strpos($url, '\\') !== false) {
+            return null;
+        }
+
+        $parts = parse_url($url);
+        if ($parts === false) {
+            return null;
+        }
+
+        $scheme = isset($parts['scheme']) ? strtolower($parts['scheme']) : '';
+        if ($scheme !== '' && $scheme !== 'http' && $scheme !== 'https') {
+            return null;
+        }
+
+        $isAbsoluteUrl = isset($parts['host']);
+        if ($isAbsoluteUrl) {
+            if ($scheme === '' || !$this->isConfiguredShopUrl($parts)) {
+                return null;
+            }
+        } elseif ($scheme !== '') {
+            return null;
+        }
+
+        if (!isset($parts['path']) || $parts['path'] === '') {
+            return null;
+        }
+
+        $path = rawurldecode($parts['path']);
+        if ($path === '' || strpos($path, "\0") !== false || strpos($path, '\\') !== false) {
+            return null;
+        }
+
+        $relativePath = ltrim($path, '/');
+        $physicalPath = $this->getShopPhysicalPath();
+        if ($physicalPath !== '') {
+            if ($relativePath === $physicalPath) {
+                $relativePath = '';
+            } elseif (strpos($relativePath, $physicalPath . '/') === 0) {
+                $relativePath = substr($relativePath, strlen($physicalPath) + 1);
+            } elseif ($isAbsoluteUrl || $path[0] === '/') {
+                return null;
+            }
+        }
+
+        if ($relativePath === '') {
+            return null;
+        }
+
+        $rootPath = $this->runFileOperationWithoutWarnings(function () {
+            return realpath(_PS_ROOT_DIR_);
+        });
+        if ($rootPath === false) {
+            return null;
+        }
+
+        $candidatePath = rtrim($rootPath, '/\\') . DIRECTORY_SEPARATOR
+            . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+        $realPath = $this->runFileOperationWithoutWarnings(function () use ($candidatePath) {
+            return realpath($candidatePath);
+        });
+        if ($realPath === false || !$this->isPathInsideRoot($realPath, $rootPath)) {
+            return null;
+        }
+
+        $isLocalFile = $this->runFileOperationWithoutWarnings(function () use ($realPath) {
+            return is_file($realPath) && is_readable($realPath);
+        });
+
+        return $isLocalFile ? $realPath : null;
+    }
+
+    /**
+     * Check an absolute URL against the configured shop HTTP and HTTPS domains.
+     *
+     * @param array $urlParts
+     *
+     * @return bool
+     */
+    private function isConfiguredShopUrl(array $urlParts)
+    {
+        if (isset($urlParts['user']) || isset($urlParts['pass']) || empty($urlParts['host'])) {
+            return false;
+        }
+
+        $urlScheme = isset($urlParts['scheme']) ? strtolower($urlParts['scheme']) : '';
+        $urlHost = strtolower(rtrim($urlParts['host'], '.'));
+        $urlPort = isset($urlParts['port'])
+            ? (int) $urlParts['port']
+            : $this->getDefaultUrlPort($urlScheme);
+        $configuredDomains = [
+            $this->parseConfiguredShopDomain(\Tools::getShopDomain(true), 'http'),
+            $this->parseConfiguredShopDomain(\Tools::getShopDomainSsl(true), 'https'),
+        ];
+
+        foreach ($configuredDomains as $domain) {
+            if ($domain !== null
+                && $urlScheme === $domain['scheme']
+                && $urlHost === $domain['host']
+                && $urlPort === $domain['port']) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Parse a domain returned by PrestaShop without relying on request headers.
+     *
+     * @param mixed $domain
+     * @param string $fallbackScheme
+     *
+     * @return array|null
+     */
+    private function parseConfiguredShopDomain($domain, $fallbackScheme)
+    {
+        if (!is_string($domain) || $domain === '') {
+            return null;
+        }
+
+        if (strpos($domain, '://') === false) {
+            $domain = $fallbackScheme . '://' . ltrim($domain, '/');
+        }
+
+        $parts = parse_url($domain);
+        if ($parts === false || empty($parts['host'])) {
+            return null;
+        }
+
+        $scheme = isset($parts['scheme']) ? strtolower($parts['scheme']) : $fallbackScheme;
+        if ($scheme !== 'http' && $scheme !== 'https') {
+            return null;
+        }
+
+        return [
+            'scheme' => $scheme,
+            'host' => strtolower(rtrim($parts['host'], '.')),
+            'port' => isset($parts['port']) ? (int) $parts['port'] : $this->getDefaultUrlPort($scheme),
+        ];
+    }
+
+    /**
+     * Return the configured shop subdirectory without surrounding slashes.
+     *
+     * @return string
+     */
+    private function getShopPhysicalPath()
+    {
+        $context = \Context::getContext();
+        if (!is_object($context) || !isset($context->shop) || !is_object($context->shop)
+            || !isset($context->shop->physical_uri) || !is_string($context->shop->physical_uri)) {
+            return '';
+        }
+
+        $parts = parse_url($context->shop->physical_uri);
+        $path = $parts !== false && isset($parts['path']) ? rawurldecode($parts['path']) : '';
+        if ($path === '' || strpos($path, "\0") !== false || strpos($path, '\\') !== false) {
+            return '';
+        }
+
+        return trim($path, '/');
+    }
+
+    /**
+     * Ensure a resolved path remains inside the canonical shop root.
+     *
+     * @param string $path
+     * @param string $rootPath
+     *
+     * @return bool
+     */
+    private function isPathInsideRoot($path, $rootPath)
+    {
+        $normalizedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        $normalizedRoot = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rootPath), DIRECTORY_SEPARATOR);
+
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $normalizedPath = strtolower($normalizedPath);
+            $normalizedRoot = strtolower($normalizedRoot);
+        }
+
+        return $normalizedPath === $normalizedRoot
+            || strpos($normalizedPath, $normalizedRoot . DIRECTORY_SEPARATOR) === 0;
+    }
+
+    /**
+     * Run a local filesystem operation without leaking recoverable warnings.
+     *
+     * @param callable $operation
+     *
+     * @return mixed
+     */
+    private function runFileOperationWithoutWarnings($operation)
+    {
+        set_error_handler(function ($severity, $message, $file, $line) {
+            return true;
+        });
+
+        try {
+            return call_user_func($operation);
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    /**
+     * Return the default port for an HTTP scheme.
+     *
+     * @param string $scheme
+     *
+     * @return int
+     */
+    private function getDefaultUrlPort($scheme)
+    {
+        return $scheme === 'https' ? 443 : 80;
     }
 
     /**

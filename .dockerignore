@@ -13,6 +13,8 @@ node_modules
 scripts
 tests/*
 !tests/frontend-compat.test.mjs
+!tests/block-selection.test.mjs
+!tests/datepicker-compat.test.mjs
 docs
 vendor
 work
