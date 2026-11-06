@@ -1,0 +1,155 @@
+name: PrettyBlocks V3 PR validation
+
+run-name: >-
+  Validate PR #${{ github.event.pull_request.number || inputs.pr_number }} on PS8 + PS9
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Open pull request number targeting main
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-validation-${{ github.repository }}-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: PR validation (PS8 + PS9)
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+      PR_LAB_EXPECTED_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || '' }}
+      PR_LAB_EXPECTED_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
+
+    steps:
+      - name: Prepare durable report fallback
+        env:
+          REPORT_DIR: ${{ runner.temp }}/pr-validation-report
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$REPORT_DIR"
+          printf '%s\n' \
+            '# PrettyBlocks V3 — validation non terminée' \
+            '' \
+            'Le harness de validation ne s’est pas exécuté. Consulter les logs du job.' \
+            > "$REPORT_DIR/report.md"
+
+      - name: Checkout trusted validation harness
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.repository.default_branch }}
+          path: trusted-harness
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check trusted harness availability
+        id: harness
+        working-directory: trusted-harness
+        env:
+          REPORT_DIR: ${{ runner.temp }}/pr-validation-report
+        run: |
+          set -Eeuo pipefail
+          if [ -f scripts/pr-lab.mjs ]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo 'available=false' >> "$GITHUB_OUTPUT"
+          printf '%s\n' \
+            '# PrettyBlocks V3 — bootstrap du PR lab' \
+            '' \
+            '⚠️ Le SHA de base fiable ne contient pas encore `scripts/pr-lab.mjs`.' \
+            '' \
+            'Aucun code de la PR n’a été utilisé comme harness et aucun test PS8/PS9 n’a été lancé.' \
+            'Ce workflow deviendra effectif après l’intégration du runner sur la branche par défaut.' \
+            'Ce résultat ne constitue pas une validation ou une approbation de la PR.' \
+            > "$REPORT_DIR/report.md"
+          printf '%s\n' \
+            '{' \
+            '  "status": "bootstrap",' \
+            '  "tested": false,' \
+            '  "reason": "trusted harness missing from base"' \
+            '}' \
+            > "$REPORT_DIR/result.json"
+
+      - name: Check validation runner
+        if: steps.harness.outputs.available == 'true'
+        working-directory: trusted-harness
+        run: node --test tests/pr-lab.test.mjs
+
+      - name: Run isolated PR validation
+        if: steps.harness.outputs.available == 'true'
+        working-directory: trusted-harness
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPORT_DIR: ${{ runner.temp }}/pr-validation-report
+        run: |
+          set -Eeuo pipefail
+          node scripts/pr-lab.mjs test "$PR_NUMBER" \
+            --output "$REPORT_DIR" \
+            --repository "$GITHUB_REPOSITORY"
+
+      - name: Write validation summary
+        if: ${{ always() }}
+        env:
+          REPORT_DIR: ${{ runner.temp }}/pr-validation-report
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$REPORT_DIR"
+          if [ ! -s "$REPORT_DIR/report.md" ]; then
+            printf '%s\n' \
+              '# PrettyBlocks V3 — rapport indisponible' \
+              '' \
+              'Le job n’a produit aucun rapport exploitable. Consulter ses logs.' \
+              > "$REPORT_DIR/report.md"
+          fi
+
+          cat "$REPORT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' \
+            '' \
+            '---' \
+            '' \
+            '### Portée de cette validation' \
+            '' \
+            '- Merge isolé de la PR dans `main` par le harness de confiance.' \
+            '- Construction du paquet et smoke tests d’installation sur PrestaShop 8 et 9.' \
+            '- Aucun secret, droit d’écriture, commentaire, approbation, merge ou publication.' \
+            '' \
+            '### Validation humaine toujours requise' \
+            '' \
+            '- Relire le diff, les migrations, les dépendances et l’attribution des auteurs.' \
+            '- Tester manuellement les parcours fonctionnels modifiés, le multiboutique et les thèmes concernés.' \
+            '- Ne pas interpréter un test vert comme une approbation de merge.' \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload validation report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: pr-validation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/pr-validation-report
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Mark bootstrap as not validated
+        if: ${{ always() && steps.harness.outputs.available != 'true' }}
+        run: |
+          echo 'The trusted PR lab is not present in the checked-out base; no validation was performed.' >&2
+          exit 1

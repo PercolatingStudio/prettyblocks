@@ -11,6 +11,8 @@ dist
 docker
 node_modules
 scripts
+tests
+docs
 vendor
 work
 _dev/node_modules

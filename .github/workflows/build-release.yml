@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -153,9 +152,9 @@ jobs:
           if gh release view "$VERSION" >/dev/null 2>&1; then
             tag_commit=$(git rev-list -n 1 "$VERSION")
             if [ "$tag_commit" != "$GITHUB_SHA" ]; then
-              echo "Release $VERSION points to $tag_commit instead of $GITHUB_SHA." >&2
-              echo "Bump the module version before publishing a different commit." >&2
-              exit 1
+              echo "Release $VERSION already exists at $tag_commit; keeping its immutable assets."
+              echo "Bump the module version when a new release is intended."
+              exit 0
             fi
 
             gh release upload "$VERSION" \
