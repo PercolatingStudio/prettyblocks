@@ -500,7 +500,7 @@
     "@vueuse/core" "^14.3.0"
     date-fns "^4.4.0"
 
-"@vueup/vue-quill@1.2.1":
+"@vueup/vue-quill@~1.2.0":
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@vueup/vue-quill/-/vue-quill-1.2.1.tgz#a17424f61b9de7e90806f0aaba92bc6f21bcb848"
   integrity sha512-wLHVtia8imOfrX6XjF/NrOfkpqfzf3Iaxp3ggkupZjCpfM92YQi16WUu8HLSA4fSl2c4/3GLLsAanzoPpPnkcg==

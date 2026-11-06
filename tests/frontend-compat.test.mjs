@@ -18,18 +18,18 @@ function yarnStanza(selector) {
 }
 
 test('keeps the V3 editor on VueQuill 1 and its Quill 1 runtime', () => {
-  assert.equal(manifest.dependencies['@vueup/vue-quill'], '1.2.0');
+  assert.equal(manifest.dependencies['@vueup/vue-quill'], '~1.2.0');
 
-  assert.equal(packageLock.packages[''].dependencies['@vueup/vue-quill'], '1.2.0');
+  assert.equal(packageLock.packages[''].dependencies['@vueup/vue-quill'], '~1.2.0');
   const npmVueQuill = packageLock.packages['node_modules/@vueup/vue-quill'];
-  assert.equal(npmVueQuill.version, '1.2.0');
+  assert.match(npmVueQuill.version, /^1\.2\.\d+$/);
   assert.equal(npmVueQuill.dependencies.quill, '^1.3.7');
   assert.match(
     packageLock.packages['node_modules/@vueup/vue-quill/node_modules/quill'].version,
     /^1\./,
   );
 
-  assert.match(yarnStanza('"@vueup/vue-quill@1.2.0"'), /\n  version "1\.2\.0"(?:\n|$)/);
-  assert.match(yarnStanza('"@vueup/vue-quill@1.2.0"'), /\n    quill "\^1\.3\.7"(?:\n|$)/);
+  assert.match(yarnStanza('"@vueup/vue-quill@~1.2.0"'), /\n  version "1\.2\.\d+"(?:\n|$)/);
+  assert.match(yarnStanza('"@vueup/vue-quill@~1.2.0"'), /\n    quill "\^1\.3\.7"(?:\n|$)/);
   assert.match(yarnStanza('quill@^1.3.7'), /\n  version "1\.[^"]+"(?:\n|$)/);
 });
