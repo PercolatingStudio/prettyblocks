@@ -261,33 +261,27 @@ class FieldCore
      */
     public function formatFieldDatepicker()
     {
-        $format = 'Y-m-d';
-        // if(isset($this->options['dateFormat'])) {
-        //     $format = $this->options['dateFormat'];
-        // }
-        // if value exists in DB and new_value is empty
-        if (!is_null($this->value) && is_null($this->new_value)) {
-            $date = \DateTime::createFromFormat($format, $this->value);
-            $timestamp = strtotime($this->value);
-
-            return $date ? $date->format($format) : date($format, $timestamp);
+        $value = $this->new_value;
+        if ($value === null) {
+            $value = $this->value;
         }
-        // if value doesn't exists in DB and new value is set
-        if ($this->force_default_value && is_null($this->new_value)) {
-            $date = \DateTime::createFromFormat($format, $this->default);
-            $timestamp = strtotime($this->value);
-
-            return $date ? $date->format($format) : date($format, $timestamp);
+        if ($value === null && $this->force_default_value) {
+            $value = $this->default;
+        }
+        // An explicitly cleared date stays empty, rather than becoming 1970-01-01.
+        if (!is_string($value) || trim($value) === '') {
+            return '';
         }
 
-        // Y-m-d\TH:i:s.u\Z is vuedatepicker default format
-        $date = \DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $this->new_value);
-        if (!$date) {
-            $date = \DateTime::createFromFormat($format, $this->new_value);
+        foreach (['!Y-m-d', '!Y-m-d\TH:i:s.uP', '!Y-m-d\TH:i:sP'] as $format) {
+            $date = \DateTime::createFromFormat($format, $value);
+            $errors = \DateTime::getLastErrors();
+            if ($date && (!$errors || (!$errors['warning_count'] && !$errors['error_count']))) {
+                return $date->format('Y-m-d');
+            }
         }
-        $timestamp = strtotime($this->value);
 
-        return $date ? $date->format($format) : date($format, $timestamp);
+        return '';
     }
 
     /**
