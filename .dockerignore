@@ -11,7 +11,8 @@ dist
 docker
 node_modules
 scripts
-tests
+tests/*
+!tests/frontend-compat.test.mjs
 docs
 vendor
 work

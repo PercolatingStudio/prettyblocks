@@ -8,6 +8,9 @@ updates:
     npm-minor-patch:
       applies-to: version-updates
       patterns: ["*"]
+      # VueQuill minor releases can change the embedded Quill major version.
+      # Keep these proposals separate for content-compatibility review.
+      exclude-patterns: ["@vueup/vue-quill"]
       update-types: [minor, patch]
 - package-ecosystem: composer
   directory: "/"

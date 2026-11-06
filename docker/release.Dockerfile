@@ -3,7 +3,9 @@
 FROM node:20-alpine AS assets
 
 WORKDIR /src
-COPY _dev/package.json _dev/yarn.lock ./_dev/
+COPY _dev/package.json _dev/package-lock.json _dev/yarn.lock ./_dev/
+COPY tests/frontend-compat.test.mjs ./tests/
+RUN node --test tests/frontend-compat.test.mjs
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
     cd _dev \
     && corepack yarn install --frozen-lockfile --non-interactive
@@ -57,6 +59,7 @@ RUN set -eux; \
         /stage/prettyblocks/dist \
         /stage/prettyblocks/node_modules \
         /stage/prettyblocks/scripts \
+        /stage/prettyblocks/tests \
         /stage/prettyblocks/work; \
     rm -f \
         /stage/prettyblocks/.dockerignore \
