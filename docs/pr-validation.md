@@ -7,7 +7,7 @@ ZIP sur deux boutiques indépendantes : PrestaShop 8.2.7 / PHP 8.1 et PrestaShop
 
 ## En local
 
-Prérequis : Node.js 20+, Git, GitHub CLI (`gh auth login`), Docker Desktop lancé
+Prérequis : Node.js 20.19+ (branche 20) ou 22.12+, Git, GitHub CLI (`gh auth login`), Docker Desktop lancé
 avec Compose 2.24.4+ (support de `!override`), curl et unzip. Aucun abonnement IA,
 clé API ou service d’hébergement n’est nécessaire.
 

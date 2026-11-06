@@ -18,7 +18,7 @@ La documentation technique est disponible ici : [https://prettyblocks.io/](https
 
 ## Installation
 
-> L'installation du module à partir de GitHub nécessite l'installation de nodejs et npm.
+> La compilation depuis les sources GitHub nécessite Node.js 20.19+ (branche 20) ou 22.12+, et npm. Le ZIP installable n'exige pas Node.js sur la boutique.
 
 ### Manuellement
 
@@ -69,7 +69,7 @@ You will find the technical documentation here (only in French, soon in english 
 
 ## Installation
 
-> In order to install the module from GitHub source, you must have node and npm available on your computer.
+> Building from GitHub source requires Node.js 20.19+ (20.x) or 22.12+, and npm. The installable ZIP does not require Node.js on the shop.
 
 ### Manually
 
