@@ -159,7 +159,7 @@ async function main() {
   const state = {
     number, repository: repo, status: 'running', warnings: [],
     harness: run('git', ['rev-parse', 'HEAD'], { cwd: harness }),
-    harnessModified: Boolean(run('git', ['status', '--porcelain', '--', 'scripts', 'docker', '.dockerignore'], { cwd: harness })),
+    harnessModified: Boolean(run('git', ['status', '--porcelain', '--', 'scripts', 'docker', 'tests', '.dockerignore'], { cwd: harness })),
     ps82: opts['ps82-port'] || '8182', ps91: opts['ps91-port'] || '8191', kept: false,
   };
   if (![state.ps82, state.ps91].every(port => /^\d+$/.test(port) && Number(port) > 1023 && Number(port) <= 65535) || Number(state.ps82) === Number(state.ps91)) throw new Error('Use two different ports between 1024 and 65535.');
@@ -196,7 +196,7 @@ async function main() {
     const files = git(['diff', '--name-only', state.base, 'HEAD']);
     writeFileSync(join(output, 'files.txt'), files + '\n');
     if (!files) state.warnings.push('Le merge ne change aucun fichier : contribution potentiellement déjà intégrée.');
-    if (/^(\.github\/|docker\/|scripts\/|\.dockerignore)/m.test(files)) state.warnings.push('La PR modifie l’infrastructure : revue manuelle obligatoire. Les tests utilisent le harness de confiance, pas les scripts proposés par la PR.');
+    if (/^(\.github\/|docker\/|scripts\/|tests\/|\.dockerignore)/m.test(files)) state.warnings.push('La PR modifie l’infrastructure : revue manuelle obligatoire. Les tests utilisent le harness de confiance, pas les scripts proposés par la PR.');
     if (/(^|\/)(upgrade\/|sql\/)|^prettyblocks.php/m.test(files)) state.warnings.push('Installation/migration potentiellement modifiée : tester aussi une mise à jour sur une copie de boutique.');
     // Replace infrastructure completely, including symlinks, before running any
     // host command. Module sources remain those of the proposed merge.
