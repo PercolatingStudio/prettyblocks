@@ -13,4 +13,5 @@ test.php
 .php-cs-fixer.cache
 _dev/yarn.lock
 .env
+work/pr-lab/
 !views/js/build

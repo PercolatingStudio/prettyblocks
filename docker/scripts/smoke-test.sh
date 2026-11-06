@@ -6,6 +6,15 @@ project_dir=$(dirname "$(dirname "$script_dir")")
 compose_file="$project_dir/docker/compose.yml"
 
 for service in ps82 ps91; do
+  case "$service" in
+    ps82)
+      port=${PS82_PORT:-8082}
+      ;;
+    ps91)
+      port=${PS91_PORT:-8091}
+      ;;
+  esac
+
   docker compose -f "$compose_file" exec -T "$service" php -r '
     require "/var/www/html/config/config.inc.php";
     $module = Module::getInstanceByName("prettyblocks");
@@ -42,6 +51,33 @@ for service in ps82 ps91; do
     echo "PrettyBlocks iframe URL redirects through a debug page: $front_url" >&2
     exit 1
   fi
+
+  admin_url="http://localhost:${port}/admin-dev/"
+  if ! admin_status=$(curl \
+    --silent \
+    --show-error \
+    --location \
+    --max-redirs 10 \
+    --cookie-jar /dev/null \
+    --connect-timeout 10 \
+    --max-time 60 \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    "$admin_url"); then
+    echo "PrestaShop back-office login page is not reachable: $admin_url" >&2
+    exit 1
+  fi
+
+  case "$admin_status" in
+    2??)
+      ;;
+    *)
+      echo "PrestaShop back-office login page returned HTTP $admin_status: $admin_url" >&2
+      exit 1
+      ;;
+  esac
+
+  echo "PrestaShop back-office login page is reachable: $admin_url (HTTP $admin_status)"
 done
 
 curl -fsS "http://localhost:${PS82_PORT:-8082}/" >/dev/null

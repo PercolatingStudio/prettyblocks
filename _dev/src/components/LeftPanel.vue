@@ -283,8 +283,8 @@ prettyBlocksContext.on('iframeLoaded', () => {
           >PrettyBlocks (v{{ prettyblocks_version }}) </a
         ><br />
         Made with ❤️ by
-        <a class="text-indigo" href="https://www.prestasafe.com" target="_blank"
-          >PrestaSafe</a
+        <a class="text-indigo" href="https://percolating-studio.com" target="_blank" rel="noopener noreferrer"
+          >Percolating Studio</a
         ><br />
         <a v-if="!prettyblocks_env" href="https://prettyblocks.io/pro" class="text-red-500" target="_blank">{{ trans('get_pro') }}</a>
       </div>
