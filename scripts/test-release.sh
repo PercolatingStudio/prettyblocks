@@ -149,6 +149,11 @@ docker compose "${compose_files[@]}" up \
 "$project_dir/docker/scripts/smoke-test.sh"
 
 for service in ps82 ps91; do
+  docker compose "${compose_files[@]}" cp \
+    "$project_dir/tests/scss-smoke.php" "$service:/tmp/prettyblocks-scss-smoke.php"
+  docker compose "${compose_files[@]}" exec -T "$service" \
+    php /tmp/prettyblocks-scss-smoke.php
+
   docker compose "${compose_files[@]}" exec -T "$service" php -r '
     require "/var/www/html/modules/prettyblocks/vendor/autoload.php";
 

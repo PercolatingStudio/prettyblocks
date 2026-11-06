@@ -200,7 +200,7 @@ async function main() {
     if (/(^|\/)(upgrade\/|sql\/)|^prettyblocks.php/m.test(files)) state.warnings.push('Installation/migration potentiellement modifiée : tester aussi une mise à jour sur une copie de boutique.');
     // Replace infrastructure completely, including symlinks, before running any
     // host command. Module sources remain those of the proposed merge.
-    for (const path of ['scripts', 'docker', '.dockerignore']) {
+    for (const path of ['scripts', 'docker', 'tests', '.dockerignore']) {
       rmSync(join(workspace, path), { recursive: true, force: true });
       cpSync(join(harness, path), join(workspace, path), { recursive: true, dereference: true });
     }
