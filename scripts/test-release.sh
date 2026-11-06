@@ -149,6 +149,17 @@ docker compose "${compose_files[@]}" up \
 "$project_dir/docker/scripts/smoke-test.sh"
 
 for service in ps82 ps91; do
+  for fixture_and_target in \
+    'field-fileupload-test:classes/prettyblocks/core/FieldCore.php' \
+    'editor-cache-test:prettyblocks.php'; do
+    fixture=${fixture_and_target%%:*}
+    target=${fixture_and_target#*:}
+    docker compose "${compose_files[@]}" cp \
+      "$project_dir/tests/${fixture}.php" "$service:/tmp/prettyblocks-${fixture}.php"
+    docker compose "${compose_files[@]}" exec -T "$service" \
+      php "/tmp/prettyblocks-${fixture}.php" "/var/www/html/modules/prettyblocks/${target}"
+  done
+
   docker compose "${compose_files[@]}" cp \
     "$project_dir/tests/scss-smoke.php" "$service:/tmp/prettyblocks-scss-smoke.php"
   docker compose "${compose_files[@]}" exec -T "$service" \

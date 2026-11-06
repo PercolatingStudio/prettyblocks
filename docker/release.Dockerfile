@@ -11,7 +11,9 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
     && corepack yarn install --frozen-lockfile --non-interactive
 
 COPY _dev ./_dev
-RUN cd _dev && corepack yarn build
+COPY tests/block-selection.test.mjs ./tests/
+RUN node --test tests/block-selection.test.mjs \
+    && cd _dev && corepack yarn build
 
 
 FROM composer:2 AS production-dependencies
