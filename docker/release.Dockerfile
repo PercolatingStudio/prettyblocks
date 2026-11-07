@@ -11,8 +11,10 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
     && corepack yarn install --frozen-lockfile --non-interactive
 
 COPY _dev ./_dev
-COPY tests/block-selection.test.mjs tests/datepicker-compat.test.mjs tests/vite-compat.test.mjs ./tests/
-RUN node --test tests/block-selection.test.mjs tests/datepicker-compat.test.mjs tests/vite-compat.test.mjs \
+COPY tests/block-selection.test.mjs tests/datepicker-compat.test.mjs \
+    tests/preview-url.test.mjs tests/vite-compat.test.mjs ./tests/
+RUN node --test tests/block-selection.test.mjs tests/datepicker-compat.test.mjs \
+    tests/preview-url.test.mjs tests/vite-compat.test.mjs \
     && cd _dev && corepack yarn build
 
 
