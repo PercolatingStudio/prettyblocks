@@ -19,22 +19,12 @@ export const eventHandler = async (event) => {
                 })
             }
            
-            if(event.data.type == 'setNewUrl' || event.data.type == 'setForceNewUrl')
-                {  
-                    let context = event.data.params.context
-                    let custom_url = event.data.params.url
-                    let force_reload = event.data.type == 'setForceNewUrl' ? true : false
-                            
-                    
-                    prettyBlocksContext.$patch({
-                        psContext: {
-                        ...prettyBlocksContext.psContext,
-                        ...context,
-                        current_url: custom_url
-                    }
-                });
-                prettyBlocksContext.changeUrl(custom_url)
-                if(force_reload) {
+            if (event.data.type == 'setNewUrl' || event.data.type == 'setForceNewUrl') {
+                const { context, url } = event.data.params
+                const { id_lang, id_shop, shop_name, href } = context
+                prettyBlocksContext.$patch({ psContext: { id_lang, id_shop, shop_name, href } })
+                const navigated = prettyBlocksContext.changeUrl(url)
+                if (event.data.type == 'setForceNewUrl' && navigated) {
                     window.location.reload()
                 }
             }

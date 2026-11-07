@@ -35,6 +35,9 @@ let currentPrettyBlocksId = computed(() => currentBlock.id_prettyblocks)
  */
 onMounted(() => {
   prettyBlocksContext.setIframe()
+  if (new URL(window.location.href).searchParams.has('startup_url')) {
+    prettyBlocksContext.pushUrl(prettyBlocksContext.psContext.current_url)
+  }
 })
 
 watch(currentBlock, (newVal, oldValue) => {
@@ -51,11 +54,7 @@ const reloadIframe = () => {
 }
 
 
-let filteredURL = ref(prettyBlocksContext.updateFilteredURL(ajax_urls.startup_url))
-
-watch(prettyBlocksContext.psContext, () => {
-  filteredURL.value = prettyBlocksContext.updateFilteredURL(prettyBlocksContext.psContext.current_url)
-})
+const filteredURL = computed(() => prettyBlocksContext.psContext.current_url)
 </script>
 
 <template>
