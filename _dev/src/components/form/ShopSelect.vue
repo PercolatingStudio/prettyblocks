@@ -23,17 +23,19 @@ const props = defineProps({
 
 const changetItem = (item) => {
   props.modelValue.shop_name = item.name
+  const { id_lang, id_shop } = prettyBlocksContext.psContext
 
   prettyBlocksContext.$patch({
     psContext: {
       id_lang: item.id_lang,
       id_shop: item.id_shop,
       shop_name: item.name,
-      current_url: item.base_url + (item.base_url.includes('?prettyblocks=1') ? '' : '?prettyblocks=1'),
       href: item.base_url,
     }
   })
-  prettyBlocksContext.changeUrl(item.base_url)
+  prettyBlocksContext.changeUrl(item.base_url, {
+    reloadSame: id_lang !== item.id_lang || id_shop !== item.id_shop,
+  })
 }
 
 const emit = defineEmits(['update:modelValue.shop_name'])

@@ -4,6 +4,7 @@ import { eventHandler } from '../scripts/eventHandler'
 import { createToaster } from "@meforma/vue-toaster";
 import { HttpClient } from '../services/HttpClient';
 import { acceptsBlockRefresh, blockSelectionAfterRefresh, sameBlockContext, snapshotBlockContext } from './blockSelection.mjs';
+import { withPrettyBlocksMode } from './previewUrl.mjs';
 const toaster = createToaster({
   position: "top",
 });
@@ -47,7 +48,9 @@ export const usePrettyBlocksContext = defineStore('prettyBlocksContext', {
       id_lang: 1,
       id_shop: 1,
       shop_name: null,
-      current_url: ajax_urls.startup_url + (ajax_urls.startup_url.includes('?prettyblocks=1') ? '' : '?prettyblocks=1'),
+      current_url: withPrettyBlocksMode(ajax_urls.startup_url, ajax_urls.base_url)
+        ?? withPrettyBlocksMode(ajax_urls.base_url)
+        ?? 'about:blank',
       href: ajax_urls.startup_url,
     },
     iframe: {
@@ -196,16 +199,25 @@ export const usePrettyBlocksContext = defineStore('prettyBlocksContext', {
       let message = { type: eventType, data: data };
       this.iframe.domElement.contentWindow.postMessage(message, "*");
     },
-    changeUrl(url) {
+    changeUrl(url, { reloadSame = false } = {}) {
+      const previewUrl = this.updateFilteredURL(url)
+      if (!previewUrl) {
+        return false
+      }
+      this.pushUrl(previewUrl)
+      if (previewUrl === this.psContext.current_url) {
+        if (reloadSame) {
+          this.reloadIframe()
+        }
+        return false
+      }
       this.$patch((state) => {
-        state.psContext.current_url = this.updateFilteredURL(url)
+        state.psContext.current_url = previewUrl
       })
-      // Update the current window URL with startup_url parameter
-      this.pushUrl(url)
       this.showLoader()
       this.setIframe()
       this.emit('urlChanged', url)
-
+      return true
     },
     showLoader() {
       this.$patch((state) => {
@@ -224,29 +236,13 @@ export const usePrettyBlocksContext = defineStore('prettyBlocksContext', {
       currentUrl.searchParams.delete('id');
       currentUrl.searchParams.delete('endpoint');
 
-      currentUrl.searchParams.set('startup_url', this.updateFilteredURL(url));
-      window.history.replaceState({}, '', currentUrl.toString());
+      currentUrl.searchParams.set('startup_url', url);
+      if (currentUrl.href !== window.location.href) {
+        window.history.replaceState({}, '', currentUrl.href);
+      }
     },
     updateFilteredURL(url) {
-        if (url.startsWith('/')) {
-
-            if (ajax_urls.base_url.endsWith('/')) {
-                url = ajax_urls.base_url + url.substring(1);
-            } else {
-                url = ajax_urls.base_url + url;
-            }
-        }
-
-        let hashIndex = url.indexOf('#');
-        if (hashIndex !== -1) {
-            url = url.substring(0, hashIndex) + '?prettyblocks=1' + url.substring(hashIndex);
-        } else if (!url.includes('?')) {
-            url += '?prettyblocks=1';
-        } else if (!url.includes('prettyblocks')) {
-            url += '&prettyblocks=1';
-        }
-
-        return url;
+      return withPrettyBlocksMode(url, ajax_urls.base_url, this.psContext.href);
     },
     reloadIframe(currentSrc = false) {
       if (this.iframe.domElement) {
