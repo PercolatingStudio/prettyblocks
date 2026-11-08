@@ -42,6 +42,14 @@ module compilé et n'est pas installable.
 
 Vous pouvez également utiliser notre module ClassicBlocks, afin d'avoir 4 blocks à utiliser. Disponible ici: [Télécharger ClassicBlocks](https://github.com/PrestaSafe/classicblocks)
 
+### Liste des pages CMS bloquée par le tri « Ouvrir dans PrettyBlocks »
+
+Si le back-office affiche `Unknown column 'edit2'` sur la liste des pages,
+ouvrez l'URL de cette liste avec le même compte et dans la même boutique.
+Ajoutez `cms_page[orderBy]=position&cms_page[sortOrder]=asc` à ses paramètres
+(`&` s'il y en a déjà, `?` sinon), en remplaçant les éventuelles valeurs de
+tri existantes. PrestaShop mémorise ainsi un tri valide, sans intervention SQL.
+
 ## Validation des pull requests V3
 
 Le [laboratoire de PR](docs/pr-validation.md) automatise la construction du ZIP,
@@ -91,6 +99,11 @@ generated **Source code (zip)** archive: it does not contain the compiled module
 and cannot be installed.
 
 You can also add our module ClassicBlocks for having 4 blocks to use [Download ClassicBlocks](https://github.com/PrestaSafe/classicblocks)
+
+If the CMS pages list is already blocked by `Unknown column 'edit2'`, open it
+as the affected employee in the affected shop and set the URL parameters
+`cms_page[orderBy]=position&cms_page[sortOrder]=asc`. This replaces the saved
+sort using PrestaShop's normal grid behavior, without editing the database.
 
 ## Compatible Themes
 
