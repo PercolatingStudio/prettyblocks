@@ -150,6 +150,7 @@ docker compose "${compose_files[@]}" up \
 
 for service in ps82 ps91; do
   for fixture_and_target in \
+    'repeater-update-test:controllers/front/ajax.php' \
     'field-fileupload-test:classes/prettyblocks/core/FieldCore.php' \
     'date-field-test:classes/prettyblocks/core/FieldCore.php' \
     'editor-cache-test:prettyblocks.php'; do
