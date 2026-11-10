@@ -26,6 +26,18 @@ use PrestaShop\PrestaShop\Core\Product\Search\SortOrder;
  */
 class HelperBuilder
 {
+    public static function buildUploadFilename(string $originalName, string $extension, $content): string
+    {
+        $extensionSuffix = '.' . $extension;
+        $hashSuffix = $content === false ? '' : '-' . md5($content);
+        $slug = Tools::str2url(pathinfo($originalName, PATHINFO_FILENAME));
+
+        // Truncate the slug, not the separator or hash, to fit the 255-byte limit.
+        $slug = rtrim(mb_strcut($slug, 0, 255 - strlen($extensionSuffix . $hashSuffix), 'UTF-8'), '-');
+
+        return $slug . ($slug === '' ? ltrim($hashSuffix, '-') : $hashSuffix) . $extensionSuffix;
+    }
+
     /**
      * ex: $path $path = '$/modules/prettyblocks/views/images/'
      * return /path/to/prestashop/modules/prettyblocks/views/images/

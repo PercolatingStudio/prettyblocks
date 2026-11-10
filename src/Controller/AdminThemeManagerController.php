@@ -64,28 +64,18 @@ class AdminThemeManagerController extends FrameworkBundleAdminController
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $imgs = [];
         if (in_array($extension, \Module::getInstanceByName('prettyblocks')->valid_types)) {
-            $md5ContentSuffix = '';
             $content = \Tools::file_get_contents($file['tmp_name']);
+            $filename = \HelperBuilder::buildUploadFilename($file['name'], $extension, $content);
 
-            if ($content !== false) {
-                $md5ContentSuffix = '_' . md5($content);
-            }
-            
-            // can upload
-            $new_name = \Tools::str2url(pathinfo($file['name'], PATHINFO_FILENAME) . $md5ContentSuffix);
-
-            // Most OS have a limit of 255 characters for file names
-            $new_name = \Tools::substr($new_name, 0, 255 - \Tools::strlen('.' . $extension));
-            
             $path = '$/modules/prettyblocks/views/images/';
             if (\Tools::getIsset('path')) {
                 $path = pSQL(\Tools::getValue('path'));
             }
             $upload_dir = \HelperBuilder::pathFormattedFromString($path);
-            if (move_uploaded_file($file['tmp_name'], $upload_dir . $new_name . '.' . $extension)) {
+            if (move_uploaded_file($file['tmp_name'], $upload_dir . $filename)) {
                 $uploaded = true;
 
-                $myurl = \HelperBuilder::pathFormattedToUrl($path) . '/' . $new_name . '.' . $extension;
+                $myurl = \HelperBuilder::pathFormattedToUrl($path) . '/' . $filename;
                 $imgs = [
                     'url' => $myurl,
                     'extension' => pathinfo($myurl, PATHINFO_EXTENSION),
