@@ -16,6 +16,7 @@ tests/*
 !tests/block-selection.test.mjs
 !tests/datepicker-compat.test.mjs
 !tests/preview-url.test.mjs
+!tests/repeater-add.test.mjs
 !tests/vite-compat.test.mjs
 docs
 vendor

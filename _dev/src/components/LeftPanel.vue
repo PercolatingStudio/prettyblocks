@@ -79,11 +79,8 @@ const initStates = async () => {
  * Push an empty State (repeater)
  */
 const loadEmptyState = async (e) => {
-  let element = {
-    id_prettyblocks: e.id_prettyblocks,
-  };
+  // Adding an item must not discard the current form before an explicit Save.
   let context = prettyBlocksContext.psContext
-  loadSubState(element);
   const params = {
     id_prettyblocks: e.id_prettyblocks,
     action: "getEmptyState",
