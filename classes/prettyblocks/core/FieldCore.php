@@ -1030,8 +1030,6 @@ class FieldCore
             }
         } elseif (isset($array['url']) && $array['url'] !== '') {
             $url = $array['url'];
-        } elseif ($this->force_default_value && isset($this->default['url'])) {
-            $url = $this->default['url'];
         }
         $secure['url'] = $url;
 

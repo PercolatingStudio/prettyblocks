@@ -15,6 +15,7 @@ tests/*
 !tests/frontend-compat.test.mjs
 !tests/block-selection.test.mjs
 !tests/datepicker-compat.test.mjs
+!tests/fileupload-clear.test.mjs
 !tests/preview-url.test.mjs
 !tests/vite-compat.test.mjs
 docs
