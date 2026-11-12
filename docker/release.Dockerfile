@@ -4,17 +4,18 @@ FROM node:20-alpine AS assets
 
 WORKDIR /src
 COPY _dev/package.json _dev/package-lock.json _dev/yarn.lock ./_dev/
-COPY tests/frontend-compat.test.mjs ./tests/
+COPY tests/frontend-compat.test.mjs tests/fileupload-clear.test.mjs ./tests/
 RUN node --test tests/frontend-compat.test.mjs
 RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
     cd _dev \
     && corepack yarn install --frozen-lockfile --non-interactive
 
 COPY _dev ./_dev
+RUN node --test tests/fileupload-clear.test.mjs
 COPY tests/block-selection.test.mjs tests/datepicker-compat.test.mjs \
-    tests/fileupload-clear.test.mjs tests/preview-url.test.mjs tests/vite-compat.test.mjs ./tests/
+    tests/preview-url.test.mjs tests/vite-compat.test.mjs ./tests/
 RUN node --test tests/block-selection.test.mjs tests/datepicker-compat.test.mjs \
-    tests/fileupload-clear.test.mjs tests/preview-url.test.mjs tests/vite-compat.test.mjs \
+    tests/preview-url.test.mjs tests/vite-compat.test.mjs \
     && cd _dev && corepack yarn build
 
 
