@@ -13,9 +13,9 @@ RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
 COPY _dev ./_dev
 RUN node --test tests/fileupload-clear.test.mjs
 COPY tests/block-selection.test.mjs tests/datepicker-compat.test.mjs \
-    tests/preview-url.test.mjs tests/vite-compat.test.mjs ./tests/
+    tests/preview-url.test.mjs tests/repeater-add.test.mjs tests/vite-compat.test.mjs ./tests/
 RUN node --test tests/block-selection.test.mjs tests/datepicker-compat.test.mjs \
-    tests/preview-url.test.mjs tests/vite-compat.test.mjs \
+    tests/preview-url.test.mjs tests/repeater-add.test.mjs tests/vite-compat.test.mjs \
     && cd _dev && corepack yarn build
 
 COPY tests/radio-group.test.mjs ./tests/
