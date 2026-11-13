@@ -69,6 +69,7 @@ const props = defineProps({
   }
 })
 let f = ref(props.field)
+const radioGroupName = `radio-group-${uuidv4()}`
 const emit = defineEmits(['updateUpload'])
 
 const updateUpload = () => {
@@ -145,8 +146,8 @@ const toolbarOptions = [
     </div>
     <div class="my-4" v-if="f.type == 'radio_group'">
       <FormControl class="my-4" :title="f.label">
-        <Radio v-for='(group, value, key) in f.choices' :key="group" v-model="f.value" :title="group"
-        :name="'radio-group-' + key" :value="value" />
+        <Radio v-for='(group, value) in f.choices' :key="value" v-model="f.value" :title="group"
+        :name="radioGroupName" :value="value" />
       </FormControl>
     </div>
 
