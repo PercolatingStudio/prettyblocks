@@ -17,6 +17,7 @@ tests/*
 !tests/datepicker-compat.test.mjs
 !tests/preview-url.test.mjs
 !tests/vite-compat.test.mjs
+!tests/radio-group.test.mjs
 docs
 vendor
 work

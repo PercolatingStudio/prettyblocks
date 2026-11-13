@@ -17,6 +17,9 @@ RUN node --test tests/block-selection.test.mjs tests/datepicker-compat.test.mjs 
     tests/preview-url.test.mjs tests/vite-compat.test.mjs \
     && cd _dev && corepack yarn build
 
+COPY tests/radio-group.test.mjs ./tests/
+RUN node --test tests/radio-group.test.mjs
+
 
 FROM composer:2 AS production-dependencies
 
