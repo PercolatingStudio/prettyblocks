@@ -166,6 +166,11 @@ for service in ps82 ps91; do
   docker compose "${compose_files[@]}" exec -T "$service" \
     php /tmp/prettyblocks-scss-smoke.php
 
+  docker compose "${compose_files[@]}" cp \
+    "$project_dir/tests/block-title-test.php" "$service:/tmp/prettyblocks-block-title-test.php"
+  docker compose "${compose_files[@]}" exec -T -u www-data "$service" \
+    php /tmp/prettyblocks-block-title-test.php /var/www/html/modules/prettyblocks/classes/PrettyBlocksModel.php
+
   docker compose "${compose_files[@]}" exec -T "$service" php -r '
     require "/var/www/html/modules/prettyblocks/vendor/autoload.php";
 

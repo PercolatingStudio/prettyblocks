@@ -806,7 +806,7 @@ class PrettyBlocksModel extends ObjectModel
 
         // if nameFrom params is present
         if (isset($block['nameFrom'], $block['settings_formatted'][$block['nameFrom']]['value'])) {
-            $formatted['title'] = $block['settings_formatted'][$block['nameFrom']]['value'];
+            $formatted['title'] = self::resolveNameFromTitle($block['settings_formatted'][$block['nameFrom']], $formatted['title']);
         }
         $formatted['is_parent'] = true;
         $formatted['is_child'] = false;
@@ -817,7 +817,7 @@ class PrettyBlocksModel extends ObjectModel
                 $numeric = (int) $formatted['id_prettyblocks'] . '-' . $key;
                 $title = ($block['repeater']['name']) ? $block['repeater']['name'] : 'Element';
                 if (isset($block['repeater']['nameFrom'], $data[$block['repeater']['nameFrom']]['value'])) {
-                    $title = $data[$block['repeater']['nameFrom']]['value'];
+                    $title = self::resolveNameFromTitle($data[$block['repeater']['nameFrom']], $title);
                 }
                 $formatted['children'][] = [
                     'id' => $numeric,
@@ -834,6 +834,23 @@ class PrettyBlocksModel extends ObjectModel
         }
 
         return $formatted;
+    }
+
+    /**
+     * Resolve a sidebar label without changing the stored or front field value.
+     */
+    private static function resolveNameFromTitle($field, $fallback)
+    {
+        if (!is_array($field) || !isset($field['value'])) {
+            return $fallback;
+        }
+        if (($field['type'] ?? null) !== 'selector') {
+            return $field['value'];
+        }
+
+        $label = $field['value']['show']['formatted'] ?? null;
+
+        return is_string($label) && $label !== '' ? $label : $fallback;
     }
 
     /**
