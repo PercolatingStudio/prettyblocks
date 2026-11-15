@@ -19,6 +19,7 @@ tests/*
 !tests/preview-url.test.mjs
 !tests/repeater-add.test.mjs
 !tests/vite-compat.test.mjs
+!tests/adaptive-background.test.mjs
 !tests/radio-group.test.mjs
 docs
 vendor

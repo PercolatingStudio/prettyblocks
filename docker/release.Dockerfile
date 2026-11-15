@@ -21,6 +21,10 @@ RUN node --test tests/block-selection.test.mjs tests/datepicker-compat.test.mjs 
 COPY tests/radio-group.test.mjs ./tests/
 RUN node --test tests/radio-group.test.mjs
 
+COPY tests/adaptive-background.test.mjs ./tests/
+COPY views/js/front.js ./views/js/front.js
+RUN node --test tests/adaptive-background.test.mjs
+
 
 FROM composer:2 AS production-dependencies
 
