@@ -185,6 +185,11 @@ for service in ps82 ps91; do
   docker compose "${compose_files[@]}" exec -T "$service" sh -lc \
     'find modules/prettyblocks -type f -name "*.php" -print0 | xargs -0 -n 1 php -l >/dev/null'
 
+  docker compose "${compose_files[@]}" cp \
+    "$project_dir/tests/block-background-test.php" "$service:/tmp/prettyblocks-block-background-test.php"
+  docker compose "${compose_files[@]}" exec -T -u www-data "$service" \
+    php /tmp/prettyblocks-block-background-test.php /var/www/html/modules/prettyblocks/classes/PrettyBlocksModel.php
+
   if [[ ${PRETTYBLOCKS_KEEP_STACK:-0} == 1 ]]; then
     # CLI smoke tests may create cache files as root; keep BO previews writable.
     docker compose "${compose_files[@]}" exec -T "$service" \

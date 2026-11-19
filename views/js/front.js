@@ -66,6 +66,7 @@ const applyAdaptiveStyle = () => {
 
     elements.forEach(function (element) {
         var currentStyle = '';
+        var backgroundColor = element.getAttribute('data-prettyblocks-background-color');
 
         // Check the window width and set the style according to Tailwind CSS breakpoints
         if (windowWidth >= 1280) { // xl
@@ -78,6 +79,9 @@ const applyAdaptiveStyle = () => {
         
 
         element.setAttribute('style', currentStyle);
+        if (backgroundColor !== null) {
+            element.style.backgroundColor = backgroundColor;
+        }
 
     });
 }
