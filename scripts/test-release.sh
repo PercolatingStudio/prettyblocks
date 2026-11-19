@@ -154,6 +154,7 @@ for service in ps82 ps91; do
     'field-fileupload-test:classes/prettyblocks/core/FieldCore.php' \
     'upload-filename-test:classes/HelperBuilder.php' \
     'date-field-test:classes/prettyblocks/core/FieldCore.php' \
+    'repeater-update-test:controllers/front/ajax.php' \
     'selector-field-test:classes/prettyblocks/core/FieldCore.php' \
     'editor-cache-test:prettyblocks.php'; do
     fixture=${fixture_and_target%%:*}

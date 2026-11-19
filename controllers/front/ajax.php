@@ -446,6 +446,16 @@ class PrettyBlocksAjaxModuleFrontController extends ModuleFrontController
         $formattedState = json_decode($stateRequest, true);
 
         $state_decoded = json_decode($state->state, true);
+        // The add action persists the item first; a save must never recreate a deleted key.
+        if (!is_array($state_decoded) || !array_key_exists($substate_key, $state_decoded)) {
+            exit(json_encode([
+                'success' => false,
+                'saved' => false,
+                'code' => 'repeater_item_missing',
+                'message' => $this->translator->trans('This repeater item no longer exists.', [], 'Modules.Prettyblocks.Admin'),
+            ]));
+        }
+
         $state_decoded[$substate_key] = $formattedState;
 
         $state->state = json_encode($state_decoded);

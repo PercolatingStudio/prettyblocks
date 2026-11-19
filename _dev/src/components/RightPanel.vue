@@ -177,7 +177,6 @@ prettyBlocksContext.on('saveConfig', () => {
 })
 prettyBlocksContext.on('saveSubState', () => {
   save()
-  prettyBlocksContext.initStates()
 })
 
 /*
@@ -185,16 +184,26 @@ prettyBlocksContext.on('saveSubState', () => {
  *
  */
 const save = async (success = true) => {
-  let block = currentBlock.value;
-  let data = await prettyBlocksContext.updateSubSelectItem(state);
+  const context = snapshotBlockContext(prettyBlocksContext);
+  const { id_prettyblocks, subSelected, need_reload } = currentBlock.value;
+  const data = await prettyBlocksContext.updateSubSelectItem(state);
+  if (data.code === 'repeater_item_missing') {
+    if (sameBlockContext(context, snapshotBlockContext(prettyBlocksContext))
+      && currentBlock.value.id_prettyblocks === id_prettyblocks
+      && currentBlock.value.subSelected === subSelected) {
+      prettyBlocksContext.displayError(data.message);
+      await prettyBlocksContext.initStates({ selectId: id_prettyblocks, context });
+    }
+    return;
+  }
   if (data.success) {
     if (data.message && success) {
       prettyBlocksContext.displayMessage(data.message);
     }
-    if (block.need_reload) {
+    if (need_reload) {
       prettyBlocksContext.reloadIframe()
     } else {
-       prettyBlocksContext.sendPrettyBlocksEvents('reloadBlock', {id_prettyblocks: block.id_prettyblocks})
+       prettyBlocksContext.sendPrettyBlocksEvents('reloadBlock', {id_prettyblocks})
     }
   }
   prettyBlocksContext.initStates()
