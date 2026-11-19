@@ -152,6 +152,7 @@ for service in ps82 ps91; do
   for fixture_and_target in \
     'field-fileupload-test:classes/prettyblocks/core/FieldCore.php' \
     'date-field-test:classes/prettyblocks/core/FieldCore.php' \
+    'selector-field-test:classes/prettyblocks/core/FieldCore.php' \
     'editor-cache-test:prettyblocks.php'; do
     fixture=${fixture_and_target%%:*}
     target=${fixture_and_target#*:}
