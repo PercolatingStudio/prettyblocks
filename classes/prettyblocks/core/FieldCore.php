@@ -25,6 +25,8 @@ use PrestaShop\PrestaShop\Adapter\Presenter\Object\ObjectPresenter;
 
 class FieldCore
 {
+    private const CLEARED_SELECTOR = ['__prettyblocks_empty_selector' => true];
+
     public $type;
     public $provider;
     public $label;
@@ -148,6 +150,10 @@ class FieldCore
         }
         if ($this->force_default_value) {
             $data['force_default_value'] = $this->force_default_value;
+        } elseif ($this->type === 'selector') {
+            // The storefront also formats this compiled field. Do not
+            // implicitly re-enable its default at that point.
+            $data['force_default_value'] = false;
         }
         if ($this->options) {
             $data['options'] = $this->options;
@@ -180,6 +186,10 @@ class FieldCore
 
     public function getValue()
     {
+        if ($this->type === 'selector' && self::isClearedSelector($this->value)) {
+            return false;
+        }
+
         return $this->value;
     }
 
@@ -895,60 +905,57 @@ class FieldCore
      */
     public function formatFieldSelectorForFront()
     {
-        //Fix issue #287 : Issue loading a collection field due to a wrong primary key 
-        //We check in the field options if key "primary_key" exists use this value as third parameter of getCollection()
-        $primary_field = null;
-        if(array_key_exists('primary_key', $this->options)){
-            $primary_field = $this->options['primary_key'];
-        }
-        
-        // if value exists in DB && new_value is empty
-        if (!is_null($this->value) && empty($this->new_value) && is_array($this->value) && isset($this->value['show']['id'])) {
-            $idCollection = (int) $this->value['show']['id'];
-
-            return $this->_getCollection($idCollection, $this->collection, $primary_field);
-        }
-        // if value doesn't exists in DB and new value is set
-        if ($this->force_default_value && isset($this->default['show']['id']) && $this->new_value == '') {
-            $idCollection = (int) $this->default['show']['id'];
-
-            return $this->_getCollection($idCollection, $this->collection, $primary_field);
+        $entry = $this->resolveSelectorValue();
+        if (!$this->isSelectorEntry($entry)) {
+            return false;
         }
 
-        // if value doesn't exists in DB and new value is set and force default value is false
-        if (is_array($this->new_value) && isset($this->new_value['show']['id'])) {
-            $idCollection = (int) $this->new_value['show']['id'];
-
-            return $this->_getCollection($idCollection, $this->collection, $primary_field);
-        }
-
-        // if no matches.
-        return false;
+        return $this->_getCollection((int) $entry['show']['id'], $this->collection, $this->options['primary_key'] ?? null);
     }
 
     /**
      * formatFieldSelector
      *
-     * @return string|bool
+     * @return array|bool
      */
     public function formatFieldSelector()
     {
-        // if value exists in DB && new_value is empty
-        if (!is_null($this->value) && empty($this->new_value) && is_array($this->value) && isset($this->value['show']['id'])) {
-            return $this->secureCollectionEntry($this->value);
+        $entry = $this->resolveSelectorValue();
+
+        return $this->isSelectorEntry($entry) ? $this->secureCollectionEntry($entry) : $entry;
+    }
+
+    private function resolveSelectorValue()
+    {
+        // A deliberate clear must survive config and repeater saves. Legacy
+        // empty saved values remain eligible for their structured default.
+        if (self::isClearedSelector($this->new_value)) {
+            return self::CLEARED_SELECTOR;
         }
-        // if value doesn't exists in DB and new value is set
-        if ($this->force_default_value && $this->new_value == '') {
-            return $this->secureCollectionEntry($this->default);
+        if ($this->isSelectorEntry($this->new_value)) {
+            return $this->new_value;
+        }
+        if (!empty($this->new_value)) {
+            return false;
+        }
+        if (self::isClearedSelector($this->value) || $this->isSelectorEntry($this->value)) {
+            return $this->value;
         }
 
-        // if value doesn't exists in DB and new value is set and force default value is false
-        if (is_array($this->new_value) && isset($this->new_value['show']['id'])) {
-            return $this->secureCollectionEntry($this->new_value);
-        }
+        return $this->force_default_value && $this->isSelectorEntry($this->default) ? $this->default : false;
+    }
 
-        // if no matches.
-        return false;
+    public static function isClearedSelector($value)
+    {
+        return $value === self::CLEARED_SELECTOR;
+    }
+
+    private function isSelectorEntry($entry)
+    {
+        $show = is_array($entry) ? ($entry['show'] ?? null) : null;
+        $id = is_array($show) ? ($show['id'] ?? null) : null;
+
+        return (is_int($id) || (is_string($id) && ctype_digit($id))) && (int) $id > 0;
     }
 
     /**
@@ -986,9 +993,9 @@ class FieldCore
         $secure = [];
         $secure['show'] = [
             'id' => (int) $array['show']['id'],
-            'primary' => (int) $array['show']['primary'],
-            'name' => $array['show']['name'],
-            'formatted' => $array['show']['formatted'],
+            'primary' => (int) ($array['show']['primary'] ?? $array['show']['id']),
+            'name' => $array['show']['name'] ?? '',
+            'formatted' => $array['show']['formatted'] ?? '',
         ];
 
         return $secure;

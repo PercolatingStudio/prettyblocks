@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, watch } from "vue"
 import { HttpClient }  from '../services/HttpClient.js'
+import { trans } from '../scripts/trans'
 
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { ChevronDownIcon } from '@heroicons/vue/24/solid'
@@ -23,6 +24,7 @@ const props = defineProps({
   collection: {
     type: String,
   },
+  clearable: Boolean,
   modelValue: Object
 })
 
@@ -54,6 +56,10 @@ function onSelect(value) {
   emit('update:modelValue', value)
 }
 
+function onClear() {
+  emit('update:modelValue', { __prettyblocks_empty_selector: true })
+}
+
 watch(() => search.query, fetchResults)
 </script>
 
@@ -75,6 +81,12 @@ watch(() => search.query, fetchResults)
             <div class="px-2 pt-1 pb-2">
               <Input v-model="search.query" icon="SearchIcon" />
             </div>
+            <button
+              v-if="clearable && modelValue?.show?.id"
+              type="button"
+              class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-inset"
+              @click="onClear(); close()"
+            >{{ trans('clear_selection') }}</button>
             <ul v-if="search.results.length > 0" class="py-1">
               <li @click="onSelect(result); close()" v-for="(result, index) in search.results" :key="index"
                 class="text-gray-700 block px-4 py-2 text-sm cursor-pointer hover:text-white hover:bg-indigo">

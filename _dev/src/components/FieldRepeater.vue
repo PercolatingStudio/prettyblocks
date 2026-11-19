@@ -97,8 +97,12 @@ const toolbarOptions = [
 
 <template>
   <div>
-    <HeaderDropdown v-if="f.type == 'selector'" v-model="f.value" :title="f.label" :label="f.label"
-      :collection="f.collection" :selector="f.selector" class="hidden md:block mb-2" />
+    <HeaderDropdown v-if="f.type == 'selector'"
+      :model-value="typeof f.value === 'object' ? f.value : null"
+      @update:model-value="f.value = $event"
+      :title="typeof f.default === 'string' && f.default.trim() ? f.default : f.label"
+      :label="f.label" :collection="f.collection" :selector="f.selector"
+      clearable class="hidden md:block mb-2" />
     <Input class="my-4" v-if="f.type == 'text'" v-model="f.value" :title="f.label" placeholder="Entrez du texte" />
     <div v-if="f.type == 'color'">
       {{ f.label }}

@@ -18,14 +18,23 @@
  * International Registered Trademark & Property of PrestaSafe
  */
 use PrestaShop\PrestaShop\Adapter\Presenter\PresenterInterface;
+use PrestaSafe\PrettyBlocks\Core\FieldCore;
 
 class BlockPresenter implements PresenterInterface
 {
     public function present($block)
     {
+        $formattedSettings = !empty($block['settings_formatted']) ? $block['settings_formatted'] : [];
+        foreach ($formattedSettings as &$field) {
+            if (($field['type'] ?? null) === 'selector' && FieldCore::isClearedSelector($field['value'] ?? null)) {
+                $field['value'] = false;
+            }
+        }
+        unset($field);
+
         $present = [
             'settings' => $block['settings'],
-            'settings_formatted' => !empty($block['settings_formatted']) ? $block['settings_formatted'] : [],
+            'settings_formatted' => $formattedSettings,
             'states' => $block['states'],
             'extra' => $block['extra'],
             'instance_id' => $block['instance_id'],

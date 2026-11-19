@@ -808,6 +808,9 @@ class PrettyBlocksModel extends ObjectModel
         if (isset($block['nameFrom'], $block['settings_formatted'][$block['nameFrom']]['value'])) {
             $formatted['title'] = $block['settings_formatted'][$block['nameFrom']]['value'];
         }
+        if (isset($formatted['title']['__prettyblocks_empty_selector']) && FieldCore::isClearedSelector($formatted['title'])) {
+            $formatted['title'] = $block['name'] ?? '';
+        }
         $formatted['is_parent'] = true;
         $formatted['is_child'] = false;
         $formatted['need_reload'] = $block['need_reload'] ?? true;
@@ -818,6 +821,9 @@ class PrettyBlocksModel extends ObjectModel
                 $title = ($block['repeater']['name']) ? $block['repeater']['name'] : 'Element';
                 if (isset($block['repeater']['nameFrom'], $data[$block['repeater']['nameFrom']]['value'])) {
                     $title = $data[$block['repeater']['nameFrom']]['value'];
+                }
+                if (isset($title['__prettyblocks_empty_selector']) && FieldCore::isClearedSelector($title)) {
+                    $title = $block['repeater']['name'] ?: 'Element';
                 }
                 $formatted['children'][] = [
                     'id' => $numeric,
