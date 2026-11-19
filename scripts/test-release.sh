@@ -150,6 +150,7 @@ docker compose "${compose_files[@]}" up \
 
 for service in ps82 ps91; do
   for fixture_and_target in \
+    'admin-grid-button-test:src/Core/Grid/Column/Type/PrettyBlocksButtonColumn.php' \
     'field-fileupload-test:classes/prettyblocks/core/FieldCore.php' \
     'date-field-test:classes/prettyblocks/core/FieldCore.php' \
     'editor-cache-test:prettyblocks.php'; do

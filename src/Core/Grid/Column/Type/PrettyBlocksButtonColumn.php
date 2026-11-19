@@ -50,6 +50,7 @@ final class PrettyBlocksButtonColumn extends AbstractColumn
         parent::configureOptions($resolver);
         $resolver
             ->setDefaults([
+                'sortable' => false,
                 'icon' => null,
                 'route_fragment' => null,
                 'button_template' => false,
