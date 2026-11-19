@@ -150,9 +150,12 @@ docker compose "${compose_files[@]}" up \
 
 for service in ps82 ps91; do
   for fixture_and_target in \
+    'admin-grid-button-test:src/Core/Grid/Column/Type/PrettyBlocksButtonColumn.php' \
     'field-fileupload-test:classes/prettyblocks/core/FieldCore.php' \
+    'upload-filename-test:classes/HelperBuilder.php' \
     'date-field-test:classes/prettyblocks/core/FieldCore.php' \
     'repeater-update-test:controllers/front/ajax.php' \
+    'selector-field-test:classes/prettyblocks/core/FieldCore.php' \
     'editor-cache-test:prettyblocks.php'; do
     fixture=${fixture_and_target%%:*}
     target=${fixture_and_target#*:}
@@ -166,6 +169,11 @@ for service in ps82 ps91; do
     "$project_dir/tests/scss-smoke.php" "$service:/tmp/prettyblocks-scss-smoke.php"
   docker compose "${compose_files[@]}" exec -T "$service" \
     php /tmp/prettyblocks-scss-smoke.php
+
+  docker compose "${compose_files[@]}" cp \
+    "$project_dir/tests/block-title-test.php" "$service:/tmp/prettyblocks-block-title-test.php"
+  docker compose "${compose_files[@]}" exec -T -u www-data "$service" \
+    php /tmp/prettyblocks-block-title-test.php /var/www/html/modules/prettyblocks/classes/PrettyBlocksModel.php
 
   docker compose "${compose_files[@]}" exec -T "$service" php -r '
     require "/var/www/html/modules/prettyblocks/vendor/autoload.php";
@@ -183,6 +191,11 @@ for service in ps82 ps91; do
 
   docker compose "${compose_files[@]}" exec -T "$service" sh -lc \
     'find modules/prettyblocks -type f -name "*.php" -print0 | xargs -0 -n 1 php -l >/dev/null'
+
+  docker compose "${compose_files[@]}" cp \
+    "$project_dir/tests/block-background-test.php" "$service:/tmp/prettyblocks-block-background-test.php"
+  docker compose "${compose_files[@]}" exec -T -u www-data "$service" \
+    php /tmp/prettyblocks-block-background-test.php /var/www/html/modules/prettyblocks/classes/PrettyBlocksModel.php
 
   if [[ ${PRETTYBLOCKS_KEEP_STACK:-0} == 1 ]]; then
     # CLI smoke tests may create cache files as root; keep BO previews writable.

@@ -227,6 +227,29 @@ set_error_handler(function ($severity, $message, $file, $line) {
 try {
     $imageSize = strlen($png);
 
+    $optional = new PrestaSafe\PrettyBlocks\Core\FieldCore([
+        'type' => 'fileupload',
+        'force_default_value' => true,
+        'default' => ['url' => '/placeholder.png'],
+    ]);
+    assertSameValue('/placeholder.png', $optional->formatFieldFileupload()['url'], 'new field still uses its default');
+    assertSameValue('/placeholder.png', $optional->secureFileUploadEntry([])['url'], 'absent URL still uses its default');
+    assertSameValue('/placeholder.png', $optional->secureFileUploadEntry(['url' => null])['url'], 'null URL retains the legacy default');
+    $optional->new_value = ['url' => ''];
+    $cleared = $optional->formatFieldFileupload();
+    assertSameValue('', $cleared['url'], 'explicit empty new value must not restore the default');
+    foreach (['filename', 'extension', 'mediatype'] as $key) {
+        assertSameValue('', $cleared[$key], 'cleared field has no ' . $key);
+    }
+    $optional->new_value = null;
+    $optional->value = json_decode(json_encode($cleared), true);
+    assertSameValue('', $optional->formatFieldFileupload()['url'], 'saved empty value stays empty after reload');
+    assertSameValue('', $optional->formatFieldFileuploadForFront()['url'], 'front end must not restore the default');
+    $optional->new_value = ['url' => 'uploads/pixel.png'];
+    assertSameValue('uploads/pixel.png', $optional->formatFieldFileupload()['url'], 'upload after clearing still works');
+    $optional->force_default_value = false;
+    assertSameValue('', $optional->secureFileUploadEntry([])['url'], 'missing URL without forced default stays empty');
+
     assertZeroMetadata('', 'empty URL');
     assertZeroMetadata('', 'missing value', false);
     assertZeroMetadata(42, 'non-string URL');

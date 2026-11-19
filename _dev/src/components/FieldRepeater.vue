@@ -69,6 +69,7 @@ const props = defineProps({
   }
 })
 let f = ref(props.field)
+const radioGroupName = `radio-group-${uuidv4()}`
 const emit = defineEmits(['updateUpload'])
 
 const updateUpload = () => {
@@ -96,8 +97,12 @@ const toolbarOptions = [
 
 <template>
   <div>
-    <HeaderDropdown v-if="f.type == 'selector'" v-model="f.value" :title="f.label" :label="f.label"
-      :collection="f.collection" :selector="f.selector" class="hidden md:block mb-2" />
+    <HeaderDropdown v-if="f.type == 'selector'"
+      :model-value="typeof f.value === 'object' ? f.value : null"
+      @update:model-value="f.value = $event"
+      :title="typeof f.default === 'string' && f.default.trim() ? f.default : f.label"
+      :label="f.label" :collection="f.collection" :selector="f.selector"
+      clearable class="hidden md:block mb-2" />
     <Input class="my-4" v-if="f.type == 'text'" v-model="f.value" :title="f.label" placeholder="Entrez du texte" />
     <div v-if="f.type == 'color'">
       {{ f.label }}
@@ -145,8 +150,8 @@ const toolbarOptions = [
     </div>
     <div class="my-4" v-if="f.type == 'radio_group'">
       <FormControl class="my-4" :title="f.label">
-        <Radio v-for='(group, value, key) in f.choices' :key="group" v-model="f.value" :title="group"
-        :name="'radio-group-' + key" :value="value" />
+        <Radio v-for='(group, value) in f.choices' :key="value" v-model="f.value" :title="group"
+        :name="radioGroupName" :value="value" />
       </FormControl>
     </div>
 

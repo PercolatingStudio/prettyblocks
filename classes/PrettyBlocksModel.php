@@ -254,7 +254,7 @@ class PrettyBlocksModel extends ObjectModel
             $block['classes'] .= ' ' . $margins;
         }
 
-        $block['styles'] = '';
+        $block['styles'] = self::formatBackgroundStyle($block['settings']['default']['bg_color'] ?? null);
         if ($paddingStyles !== '') {
             $block['styles'] .= $paddingStyles;
         }
@@ -293,6 +293,68 @@ class PrettyBlocksModel extends ObjectModel
         $block['templateSelected'] = $this->_getTemplateSelected($block);
 
         return $block;
+    }
+
+    /**
+     * Render a simple CSS color without allowing attribute/declaration injection.
+     */
+    private static function formatBackgroundStyle($color)
+    {
+        if (!is_string($color) || strlen($color) > 128 || strpbrk($color, "\r\n") !== false) {
+            return '';
+        }
+        $color = trim($color);
+        $valid = preg_match('/\A#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})\z/i', $color)
+            || preg_match('/\A[a-z]+\z/i', $color)
+            || preg_match('/\A(?:rgb|rgba|hsl|hsla)\((?=[^)]*[0-9])(?:[0-9+\-.,%\/ \t]|deg|grad|rad|turn)+\)\z/i', $color);
+        if (!$valid) {
+            return '';
+        }
+        // $block.styles is escaped by Smarty. Keep attribute values unquoted,
+        // as for the existing spacing attributes, and remove CSS whitespace
+        // by expressing functional colors in equivalent comma notation.
+        if (strpos($color, '(') !== false) {
+            $open = strpos($color, '(');
+            $body = trim(substr($color, $open + 1, -1));
+            if (strpos($body, ',') !== false) {
+                if (strpos($body, '/') !== false) {
+                    return '';
+                }
+                $arguments = array_map('trim', explode(',', $body));
+                foreach ($arguments as $argument) {
+                    if ($argument === '' || preg_match('/[ \t]/', $argument)) {
+                        return '';
+                    }
+                }
+            } else {
+                $parts = explode('/', $body);
+                if (count($parts) > 2) {
+                    return '';
+                }
+                $arguments = preg_split('/[ \t]+/', trim($parts[0]), -1, PREG_SPLIT_NO_EMPTY);
+                if (count($arguments) !== 3) {
+                    return '';
+                }
+                if (isset($parts[1])) {
+                    $alpha = trim($parts[1]);
+                    if ($alpha === '' || preg_match('/[ \t]/', $alpha)) {
+                        return '';
+                    }
+                    $arguments[] = $alpha;
+                }
+            }
+            if (count($arguments) !== 3 && count($arguments) !== 4) {
+                return '';
+            }
+            $function = stripos($color, 'hsl') === 0 ? 'hsl' : 'rgb';
+            $color = $function . (count($arguments) === 4 ? 'a' : '') . '(' . implode(',', $arguments) . ')';
+        }
+        if (preg_match('/[\s"\'`=<>]/', $color)) {
+            return '';
+        }
+        $color = htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+        return 'style=background-color:' . $color . '; data-prettyblocks-background-color=' . $color . ' ';
     }
 
     public function _formatConfig($block, $context = 'front')
@@ -806,7 +868,10 @@ class PrettyBlocksModel extends ObjectModel
 
         // if nameFrom params is present
         if (isset($block['nameFrom'], $block['settings_formatted'][$block['nameFrom']]['value'])) {
-            $formatted['title'] = $block['settings_formatted'][$block['nameFrom']]['value'];
+            $formatted['title'] = self::resolveNameFromTitle($block['settings_formatted'][$block['nameFrom']], $formatted['title']);
+        }
+        if (isset($formatted['title']['__prettyblocks_empty_selector']) && FieldCore::isClearedSelector($formatted['title'])) {
+            $formatted['title'] = $block['name'] ?? '';
         }
         $formatted['is_parent'] = true;
         $formatted['is_child'] = false;
@@ -817,7 +882,10 @@ class PrettyBlocksModel extends ObjectModel
                 $numeric = (int) $formatted['id_prettyblocks'] . '-' . $key;
                 $title = ($block['repeater']['name']) ? $block['repeater']['name'] : 'Element';
                 if (isset($block['repeater']['nameFrom'], $data[$block['repeater']['nameFrom']]['value'])) {
-                    $title = $data[$block['repeater']['nameFrom']]['value'];
+                    $title = self::resolveNameFromTitle($data[$block['repeater']['nameFrom']], $title);
+                }
+                if (isset($title['__prettyblocks_empty_selector']) && FieldCore::isClearedSelector($title)) {
+                    $title = $block['repeater']['name'] ?: 'Element';
                 }
                 $formatted['children'][] = [
                     'id' => $numeric,
@@ -834,6 +902,23 @@ class PrettyBlocksModel extends ObjectModel
         }
 
         return $formatted;
+    }
+
+    /**
+     * Resolve a sidebar label without changing the stored or front field value.
+     */
+    private static function resolveNameFromTitle($field, $fallback)
+    {
+        if (!is_array($field) || !isset($field['value'])) {
+            return $fallback;
+        }
+        if (($field['type'] ?? null) !== 'selector') {
+            return $field['value'];
+        }
+
+        $label = $field['value']['show']['formatted'] ?? null;
+
+        return is_string($label) && $label !== '' ? $label : $fallback;
     }
 
     /**

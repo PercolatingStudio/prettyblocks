@@ -80,7 +80,7 @@ const removeImg = () => {
 
   HttpClient.post(props.uploadUrl, params)
     .then((data) => {
-      updateValue(props.default);
+      updateValue({ url: "" });
     })
     .catch((error) => console.error(error));
 };

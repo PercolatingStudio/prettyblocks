@@ -15,8 +15,12 @@ tests/*
 !tests/frontend-compat.test.mjs
 !tests/block-selection.test.mjs
 !tests/datepicker-compat.test.mjs
+!tests/fileupload-clear.test.mjs
 !tests/preview-url.test.mjs
+!tests/repeater-add.test.mjs
 !tests/vite-compat.test.mjs
+!tests/adaptive-background.test.mjs
+!tests/radio-group.test.mjs
 docs
 vendor
 work
