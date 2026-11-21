@@ -1157,6 +1157,15 @@ class PrettyBlocksModel extends ObjectModel
             if (isset($settingsDB[$key]['value'])) {
                 $fieldCore->setAttribute('value', $settingsDB[$key]['value']);
             }
+            if (!$with_tabs && $context === 'front' && $fieldCore->type === 'fileupload') {
+                // Theme templates need the same resolved image value as block templates.
+                $formatted = $fieldCore->getFrontValue();
+                // Keep empty settings falsy (or an unchanged explicit clear).
+                $no_tabs[$key] = ($formatted['url'] ?? '') === ''
+                    ? ($fieldCore->getValue() ?? false)
+                    : $formatted;
+                continue;
+            }
             $res[$tab][$key] = $fieldCore->compile();
             $no_tabs[$key] = $fieldCore->getValue() ?? false;
         }
