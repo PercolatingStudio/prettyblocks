@@ -152,6 +152,7 @@ for service in ps82 ps91; do
   for fixture_and_target in \
     'admin-grid-button-test:src/Core/Grid/Column/Type/PrettyBlocksButtonColumn.php' \
     'field-fileupload-test:classes/prettyblocks/core/FieldCore.php' \
+    'theme-setting-fileupload-test:classes/PrettyBlocksModel.php' \
     'upload-filename-test:classes/HelperBuilder.php' \
     'date-field-test:classes/prettyblocks/core/FieldCore.php' \
     'repeater-update-test:controllers/front/ajax.php' \
